@@ -1,38 +1,494 @@
-.App {
-  text-align: center;
+/* =========================================
+    1. ESTILOS GLOBALES Y LOGIN
+   ========================================= */
+
+/* --- Página de Login --- */
+.login-container {
+    display: flex;
+    width: 100%;
+    height: 100vh; 
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.login-aside {
+    flex-basis: 45%;
+    background-color: #6a8dff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.logo-container {
+    width: 200px;
+    height: 200px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #555;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.login-form-container {
+    flex-basis: 55%;
+    background-color: #f4f7fc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.App-link {
-  color: #61dafb;
+.login-form {
+    width: 100%;
+    max-width: 350px;
+    padding: 20px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.login-form h2 {
+    font-size: 2.2rem;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.login-form button {
+    width: 100%;
+    padding: 12px;
+    background-color: #6a8dff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-form button:hover {
+    background-color: #587efc;
+}
+
+/* Campos de formulario (usado en Login y Formularios de dashboard) */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+/* Input genérico, (Login usa uno más simple) */
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    box-sizing: border-box; /* Añadido para consistencia */
+}
+
+/* =========================================
+    2. LAYOUT DEL DASHBOARD
+   (CONTENEDOR, HEADER, CONTENT)
+   ========================================= */
+
+.dashboard-container {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    background-color: #f4f7fc; /* Color de fondo general */
+}
+
+.main-content {
+    flex-grow: 1; /* Ocupa el resto del espacio */
+    margin-left: 250px; /* Ancho por defecto del sidebar */
+    transition: margin-left 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content.collapsed {
+    margin-left: 80px; /* Ancho del sidebar colapsado */
+}
+
+.main-header {
+    width: 100%;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: flex-end; /* Alinea info de admin a la derecha */
+    align-items: center;
+    background-color: #f4f7fc;
+    box-sizing: border-box;
+    min-height: 90px; /* Coincide con altura del logo */
+}
+
+.admin-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: 1.1rem; /* Petición 2: Texto más grande */
+}
+
+.admin-info span:first-child {
+    font-weight: bold;
+    font-size: 1.25rem; /* Petición 2: Texto más grande */
+}
+
+.page-content {
+    /* Contenido de página más arriba */
+    padding: 0 30px 20px 30px; 
+    flex-grow: 1; /* Ocupa el espacio restante */
+}
+
+/* =========================================
+    3. SIDEBAR (MENÚ LATERAL)
+   ========================================= */
+
+/* --- 3a. Sidebar General y Logo --- */
+
+.sidebar {
+    width: 250px; /* Ancho normal */
+    height: 100vh;
+    position: fixed; /* Fijo en la pantalla */
+    top: 0;
+    left: 0;
+    background-color: #ffffff;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    overflow-x: hidden; /* Oculta texto al colapsar */
+}
+
+.sidebar.collapsed {
+    width: 80px; /* Ancho colapsado */
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    height: 90px; /* Petición 5: Más alto */
+    box-sizing: border-box;
+    background-color: #6a8dff; /* Fondo azul del logo */
+    color: white;
+}
+
+.logo {
+    display: none; /* Oculta el .svg, usa el texto */
+}
+
+.logo-text {
+    font-weight: bold;
+    font-size: 1.4rem; /* Petición 5: Más grande */
+    padding: 12px 24px;
+    border: 2px solid white;
+    border-radius: 8px;
+    white-space: nowrap; /* Evita que el texto se rompa */
+}
+
+.sidebar.collapsed .logo-text {
+    display: none; /* Oculta el texto cuando está colapsado */
+}
+
+/* --- 3b. Items de Navegación (Enlaces) --- */
+
+.nav-menu {
+    flex-grow: 1; /* Ocupa el espacio del medio */
+    padding-top: 20px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 18px 30px; /* Petición 4: Más padding */
+    margin: 8px 10px;
+    text-decoration: none;
+    color: #555;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    white-space: nowrap; /* Evita que el texto se rompa */
+}
+
+.nav-text {
+    font-size: 1.1rem; /* Petición 4: Texto más grande */
+}
+
+.nav-item img {
+    width: 28px; /* Iconos más grandes */
+    height: 28px;
+    margin-right: 25px; /* Más separación */
+    transition: margin 0.3s ease;
+}
+
+.nav-item:hover {
+    transform: scale(1.03); /* Se hace un poquito más grande */
+    background-color: #f0f0f0;
+}
+
+/* --- Estilo Activo --- */
+.nav-item.active {
+    background-color: #e4e9ff; /* Recuadro azul claro */
+    color: #4a6fff; /* Texto azul */
+    font-weight: bold;
+}
+
+.nav-item.active:hover {
+    transform: scale(1); /* Quita el hover si está activo */
+    background-color: #e4e9ff;
+}
+
+/* --- Estados Colapsados (Navegación) --- */
+.sidebar.collapsed .nav-item {
+    justify-content: center;
+    padding: 18px 10px;
+}
+
+.sidebar.collapsed .nav-item img {
+    margin-right: 0;
+}
+
+.sidebar.collapsed .nav-text {
+    display: none; /* Oculta el texto al colapsar */
+}
+
+/* --- 3c. Footer del Sidebar (Botones Salir/Colapsar) --- */
+
+.sidebar-footer {
+    padding: 10px;
+    border-top: 1px solid #eee;
+}
+
+.logout-btn {
+    cursor: pointer;
+}
+
+.toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Alinea la flecha a la derecha */
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.toggle-btn img {
+    width: 28px; /* Flecha más grande */
+    height: 28px;
+    transition: transform 0.3s ease;
+}
+
+.toggle-btn img.flipped {
+    transform: rotate(180deg); /* Gira la flecha al colapsar */
+}
+
+.sidebar.collapsed .toggle-btn {
+    justify-content: center;
+}
+
+
+/* =========================================
+    4. ESTILOS DE PÁGINAS 
+   (TÍTULOS, TABLAS, FORMULARIOS)
+   ========================================= */
+
+/* --- 4a. Título de Página genérico --- */
+.page-title {
+    display: flex;
+    align-items: center;
+    font-size: 2rem; /* Más grande */
+    color: #4a6fff; /* Petición 3: Título en azul */
+    font-weight: bold;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 15px;
+    /* (Padding-top eliminado para que suba el contenido) */
+}
+
+.page-title img {
+    width: 32px; /* Más grande */
+    height: 32px;
+    margin-right: 12px;
+}
+
+/* --- 4b. Página Usuarios (Filtros, Tabla) --- */
+.filter-buttons {
+    margin-bottom: 20px;
+}
+
+.filter-btn {
+    padding: 10px 20px;
+    margin-right: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: 1px solid #6a8dff;
+    background-color: #fff;
+    color: #6a8dff;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+    background-color: #f0f3ff;
+}
+
+.filter-btn.active {
+    background-color: #6a8dff;
+    color: #fff;
+}
+
+.table-container {
+    width: 100%;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    overflow: hidden; /* Para los bordes redondeados */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 15px 20px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+thead tr {
+    background-color: #6a8dff;
+    color: white;
+}
+
+thead th {
+    font-weight: 600;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+tbody tr td {
+    color: #555;
+    height: 50px; /* Altura fija para filas vacías */
+}
+
+tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* --- 4c. Páginas de Formulario (Agregar/Editar) --- */
+.form-usuario-container {
+    max-width: 900px; /* Ancho máximo del formulario */
+    margin: 0 auto;
+    height: 100%;
+    overflow-y: auto; 
+}
+
+.user-form-card {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    padding: 30px 40px;
+}
+
+/* --- Avatar --- */
+.avatar-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.avatar-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid #eee;
+    object-fit: cover; /* Para que la imagen se vea bien */
+}
+
+.edit-avatar-btn {
+    position: absolute;
+    bottom: 0;
+    right: calc(50% - 60px); /* Centrado */
+    transform: translateX(35px);
+    background-color: #6a8dff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
+    cursor: pointer;
+    border: 2px solid white;
+}
+
+/* --- Grid de Campos --- */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Dos columnas */
+    gap: 20px 30px; /* Espacio vertical y horizontal */
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1; /* Ocupa todo el ancho */
+}
+
+/* Estilos de Inputs específicos para formularios del Dashboard */
+.form-group input {
+    padding: 12px 15px;
+    border-radius: 6px;
+    color: #333;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #6a8dff;
+    box-shadow: 0 0 0 2px #e4e9ff;
+}
+
+.form-group input:disabled {
+    background-color: #f0f0f0;
+    color: #777;
+    border-color: #e0e0e0;
+}
+
+/* --- 4d. Botones genéricos (Formularios) --- */
+.form-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end; /* Botones a la derecha */
+    gap: 15px;
+}
+
+.btn {
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background-color: #6a8dff;
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #587efc;
+}
+
+.btn-danger {
+    background-color: #d90429;
+    color: white;
+}
+.btn-danger:hover {
+    background-color: #b30021;
 }

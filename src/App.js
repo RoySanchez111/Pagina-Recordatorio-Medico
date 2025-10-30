@@ -1,24 +1,29 @@
-import logo from './logo.svg';
+import { Routes, Route } from 'react-router-dom';
+import Login from './Login'; // Tu componente de Login
+import DashboardLayout from './DashboardLayout'; // El nuevo layout
+import Usuarios from './Usuarios';
+import AgregarUsuario from './AgregarUsuario';
+import EditarUsuario from './EditarUsuario';
 import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Routes>
+      {/* Ruta 1: El Login (ocupa toda la página) */}
+      <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
+
+      {/* Ruta 2: El "Dashboard" que usa el layout compartido */}
+      <Route path="/dashboard" element={<DashboardLayout />}>
+        {/* Estas son las páginas "hijas" que se mostrarán dentro del layout */}
+        <Route path="usuarios" element={<Usuarios />} />
+        <Route path="agregar-usuario" element={<AgregarUsuario />} />
+        <Route path="editar-usuario" element={<EditarUsuario />} />
+        
+        {/* Opcional: una ruta por defecto */}
+        <Route index element={<Usuarios />} /> 
+      </Route>
+    </Routes>
   );
 }
 
