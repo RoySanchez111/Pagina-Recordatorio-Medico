@@ -183,7 +183,7 @@
 .logo-text {
     font-weight: bold;
     font-size: 1.4rem; /* Petición 5: Más grande */
-    padding: 12px 24px;
+    padding: 12px 4px;
     border: 2px solid white;
     border-radius: 8px;
     white-space: nowrap; /* Evita que el texto se rompa */
@@ -218,11 +218,12 @@
 }
 
 .nav-item img {
-    width: 28px; /* Iconos más grandes */
+    width: 28px;
     height: 28px;
-    margin-right: 25px; /* Más separación */
+    margin-right: 8px; /* 🔹 antes 25px */
     transition: margin 0.3s ease;
 }
+
 
 .nav-item:hover {
     transform: scale(1.03); /* Se hace un poquito más grande */
