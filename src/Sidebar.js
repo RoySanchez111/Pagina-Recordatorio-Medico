@@ -1,9 +1,8 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import './App.css'; // Usa el CSS global
+import './App.css'; 
 
-// Importa tus imágenes (¡asegúrate que las rutas sean correctas!)
-// Asumo que 'logo' es 'image.png' como en tu código
+// Importa tus imágenes
 import logo from './assets/image.png'; 
 import usuariosAzul from './assets/usuarios-azul.png';
 import usuariosNegro from './assets/usuarios-negro.png';
@@ -18,8 +17,7 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        // Esta es funcionalidad de UI (navegación), la mantenemos
-        navigate('/login'); // Redirige al login
+        navigate('/login'); 
     };
 
     return (
@@ -27,7 +25,6 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
             
             {/* --- LOGO --- */}
             <div className="logo-section">
-                {/* <img src={logo} alt="Logo" className="logo" /> */}
                 <span className="logo-text">[ LOGO ]</span>
             </div>
 
@@ -59,6 +56,36 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
                         </>
                     )}
                 </NavLink>
+
+                {/* --- NUEVAS RUTAS AÑADIDAS --- */}
+
+                <NavLink to="/dashboard/recetas" className="nav-item">
+                    {({ isActive }) => (
+                        <>
+                            <img src={isActive ? agregarAzul : agregarNegro} alt="Recetas" />
+                            <span className="nav-text">Agregar Recetas</span>
+                        </>
+                    )}
+                </NavLink>
+
+                <NavLink to="/dashboard/consultas" className="nav-item">
+                    {({ isActive }) => (
+                        <>
+                            <img src={isActive ? editarAzul : editarNegro} alt="Consultas" />
+                            <span className="nav-text">Gestionar Consultas</span>
+                        </>
+                    )}
+                </NavLink>
+
+                <NavLink to="/dashboard/solicitar-consulta" className="nav-item">
+                    {({ isActive }) => (
+                        <>
+                            <img src={isActive ? usuariosAzul : usuariosNegro} alt="Solicitar" />
+                            <span className="nav-text">Solicitar Consulta</span>
+                        </>
+                    )}
+                </NavLink>
+
             </nav>
 
             {/* --- SALIR Y TOGGLE --- */}

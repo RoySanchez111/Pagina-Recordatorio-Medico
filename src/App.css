@@ -631,3 +631,76 @@ tbody tr:hover {
     height: 1px;
     overflow: hidden;
 }
+
+/* --- Lista de Consultas y Recetas --- */
+.lista-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.item-card {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+}
+
+.item-card h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.item-card p {
+    margin: 4px 0;
+    color: #555;
+    font-size: 0.95rem;
+}
+
+.item-card-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+/* --- Botones para Aceptar/Reprogramar --- */
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+
+/* --- Badges de Estado --- */
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: white;
+}
+
+.status-pendiente {
+    background-color: #ffc107; /* Amarillo */
+    color: #333;
+}
+
+.status-aceptada {
+    background-color: #28a745; /* Verde */
+}
+
+.status-reprogramada {
+    background-color: #dc3545; /* Rojo */
+}
