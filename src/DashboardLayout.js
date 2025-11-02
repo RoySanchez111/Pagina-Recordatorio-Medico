@@ -38,6 +38,23 @@ function DashboardLayout() {
                 </div>
 
             </main>
+
+            {/* === BOTONES DE ACCESIBILIDAD === */}
+            {/* Botón flotante de accesibilidad */}
+            <button id="toggle-accessibility" className="btn-accessibility">
+                ♿ Accesibilidad
+            </button>
+
+            {/* Panel de opciones de accesibilidad */}
+            <div id="accessibility-panel" style={{display: 'none'}}>
+                <h3>Opciones de Accesibilidad</h3>
+                <button id="increase-text">Aumentar Texto</button>
+                <button id="decrease-text">Reducir Texto</button>
+                <button id="read-buttons">Leer Botones</button>
+                <button id="toggle-contrast">Alto Contraste</button>
+                <button id="reset-accessibility">Restablecer</button>
+            </div>
+            
         </div>
     );
 }
