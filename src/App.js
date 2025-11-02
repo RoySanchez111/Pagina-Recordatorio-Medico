@@ -5,7 +5,7 @@ import Usuarios from './Usuarios';
 import AgregarUsuario from './AgregarUsuario';
 import EditarUsuario from './EditarUsuario';
 import './App.css';
-
+import './opciones de accesibilidad';
 function App() {
   return (
     <Routes>
