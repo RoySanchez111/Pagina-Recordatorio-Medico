@@ -1,60 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import editarAzul from './assets/editar-azul.png';
 import defaultAvatar from './assets/default-profile-image.png';
 
-// --- Simulación de datos desde "Backend" ---
-const fakeApiData = {
-    '1': {
-        rol: 'Doctor',
-        nombre: 'Nicolas Alvarez',
-        correo: 'nicolas@hospital.com',
-        cedula: 'A1234567',
-        especialidad: 'Cardiología',
-        telefono: '+52 111 222 3333',
-        direccion: 'Av. Salud #123',
-        contraseña: '******',
-        avatar: defaultAvatar,
-    },
-    '2': {
-        rol: 'Administrador',
-        nombre: 'Mariana López',
-        correo: 'mariana@admin.com',
-        contraseña: '******',
-        avatar: defaultAvatar,
-    },
-    '3': {
-        rol: 'Paciente',
-        nombre: 'Ana Gómez',
-        sexo: 'Femenino',
-        telefono: '+52 555 888 9999',
-        direccion: 'Calle Paz 456',
-        nacimiento: '1998-02-15',
-        padecimiento: 'Hipertensión',
-        avatar: defaultAvatar,
-    },
-};
-
 function EditarUsuario() {
+    // --- Estados principales ---
     const [claveUnica, setClaveUnica] = useState('');
+    const [usuarios, setUsuarios] = useState([]);
     const [usuarioData, setUsuarioData] = useState(null);
     const [editableFields, setEditableFields] = useState({});
 
-    // --- Buscar usuario al presionar Enter ---
+    // --- Cargar usuarios desde JSON o localStorage ---
+    useEffect(() => {
+        const storedData = localStorage.getItem('usuarios');
+        if (storedData) {
+            setUsuarios(JSON.parse(storedData));
+        } else {
+            fetch('/usuarios.json')
+                .then(res => res.json())
+                .then(data => {
+                    setUsuarios(data);
+                    localStorage.setItem('usuarios', JSON.stringify(data));
+                })
+                .catch(err => console.error('Error al cargar usuarios.json:', err));
+        }
+    }, []);
+
+    // --- Buscar usuario por ID ---
     const handleClaveCheck = (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            const data = fakeApiData[claveUnica.trim()];
-            if (data) {
-                setUsuarioData(data);
-                setEditableFields({ ...data });
+            const usuarioEncontrado = usuarios.find(u => String(u.id) === claveUnica.trim());
+            if (usuarioEncontrado) {
+                setUsuarioData(usuarioEncontrado);
+                setEditableFields({ ...usuarioEncontrado });
             } else {
-                alert('Usuario no encontrado (usa 1, 2 o 3)');
+                alert('Usuario no encontrado.');
                 setUsuarioData(null);
             }
         }
     };
 
+    // --- Manejar cambios en inputs ---
     const handleChange = (e) => {
         setEditableFields({
             ...editableFields,
@@ -62,30 +49,53 @@ function EditarUsuario() {
         });
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log('Datos actualizados:', editableFields);
-        alert('Usuario actualizado');
+    // --- Cargar nueva imagen de cédula ---
+    const handleCedulaImageChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setEditableFields({
+                ...editableFields,
+                cedulaImagen: reader.result, // Guardamos la imagen en base64
+            });
+        };
+        reader.readAsDataURL(file);
     };
 
+    // --- Guardar cambios en localStorage ---
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const nuevosUsuarios = usuarios.map(u =>
+            String(u.id) === String(editableFields.id) ? editableFields : u
+        );
+        setUsuarios(nuevosUsuarios);
+        localStorage.setItem('usuarios', JSON.stringify(nuevosUsuarios));
+        alert('Usuario actualizado correctamente ✅');
+    };
+
+    // --- Eliminar usuario ---
     const handleEliminar = () => {
         if (window.confirm('¿Estás seguro de eliminar este usuario?')) {
-            console.log('Usuario eliminado:', claveUnica);
-            handleRecargar(); // limpia todo al eliminar
+            const nuevosUsuarios = usuarios.filter(u => String(u.id) !== String(claveUnica));
+            setUsuarios(nuevosUsuarios);
+            localStorage.setItem('usuarios', JSON.stringify(nuevosUsuarios));
+            alert('Usuario eliminado ❌');
+            handleRecargar();
         }
     };
 
-    // Limpia el formulario como si recargaras la página
+    // --- Limpiar formulario ---
     const handleRecargar = () => {
         setUsuarioData(null);
         setEditableFields({});
         setClaveUnica('');
     };
 
-    // --- Campos según el rol ---
+    // --- Renderizar los campos según el rol ---
     const renderCamposPorRol = () => {
         if (!usuarioData) return null;
-
         const rol = usuarioData.rol.toLowerCase();
 
         switch (rol) {
@@ -101,15 +111,27 @@ function EditarUsuario() {
                                 onChange={handleChange}
                             />
                         </div>
-                        <div className="form-group">
-                            <label>Cédula Profesional</label>
-                            <input
-                                type="text"
-                                name="cedula"
-                                value={editableFields.cedula || ''}
-                                onChange={handleChange}
+
+                        {/* --- Vista de imagen de cédula --- */}
+                        <div className="form-group full-width">
+                        <label>Cédula Profesional (Imagen)</label>
+
+                        {/* --- Vista de imagen de cédula --- */}
+                        <div className="preview-wrapper">
+                            <img
+                            src={editableFields.cedulaImagen || defaultAvatar}
+                            alt="Cédula profesional"
+                            className="preview-image"
                             />
                         </div>
+
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleCedulaImageChange}
+                        />
+                        </div>
+
                         <div className="form-group">
                             <label>Especialidad</label>
                             <input
@@ -137,7 +159,7 @@ function EditarUsuario() {
                                 onChange={handleChange}
                             />
                         </div>
-                        <div className="form-group full-width">
+                        <div className="form-group">
                             <label>Dirección de consultorio</label>
                             <input
                                 type="text"
@@ -237,19 +259,7 @@ function EditarUsuario() {
             </h2>
 
             <form className="user-form-card" onSubmit={handleSubmit}>
-                {/* --- Avatar --- */}
-                {usuarioData && (
-                    <div className="avatar-section">
-                        <img
-                            src={usuarioData.avatar || defaultAvatar}
-                            alt="Avatar"
-                            className="avatar-img"
-                        />
-                        <button type="button" className="edit-avatar-btn"></button>
-                    </div>
-                )}
-
-                {/* --- Campo de ID --- */}
+                {/* --- Campo de ID para buscar usuario --- */}
                 <div className="form-group full-width">
                     <label>ID (Presiona Enter para buscar)</label>
                     <input
@@ -259,11 +269,11 @@ function EditarUsuario() {
                         onChange={(e) => setClaveUnica(e.target.value)}
                         onKeyDown={handleClaveCheck}
                         disabled={!!usuarioData}
-                        placeholder="Escribe 1, 2 o 3"
+                        placeholder="Ej. 1, 2, 3..."
                     />
                 </div>
 
-                {/* --- Si hay usuario --- */}
+                {/* --- Si hay usuario encontrado --- */}
                 {usuarioData && (
                     <div className="form-grid">
                         <div className="form-group full-width">
@@ -272,15 +282,15 @@ function EditarUsuario() {
                         </div>
                         <div className="form-group full-width">
                             <label>Nombre completo</label>
-                            <input type="text" value={usuarioData.nombre} disabled />
+                            <input type="text" value={usuarioData.nombreCompleto} disabled />
                         </div>
 
-                        {/* Campos dinámicos según el rol */}
+                        {/* --- Campos según el rol --- */}
                         {renderCamposPorRol()}
                     </div>
                 )}
 
-                {/* --- Botones --- */}
+                {/* --- Botones de acción --- */}
                 {usuarioData && (
                     <div className="form-actions">
                         <button

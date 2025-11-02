@@ -2,28 +2,61 @@ import React, { useState } from 'react';
 import './App.css';
 import agregarAzul from './assets/agregar-azul.png';
 import defaultAvatar from './assets/default-profile-image.png';
+import usuariosData from './usuarios.json';
 
 function AgregarUsuario() {
+    // --- Estados principales ---
     const [rol, setRol] = useState('');
     const [mostrarCampos, setMostrarCampos] = useState(false);
+    const [formData, setFormData] = useState({});
+    const [usuarios, setUsuarios] = useState(
+        JSON.parse(localStorage.getItem('usuarios')) || usuariosData
+    );
 
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const valor = e.target.value.trim().toLowerCase();
-            if (valor === 'doctor' || valor === 'administrador') {
-                setRol(valor);
-                setMostrarCampos(true);
-            } else {
-                alert('Por favor escribe "Doctor" o "Administrador".');
-                setMostrarCampos(false);
-            }
+    // --- Manejar cambio en campos de texto ---
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    // --- Manejar carga de archivo (imagen de cédula) ---
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                // Guardamos la imagen como base64 para poder mostrarla o guardarla
+                setFormData({ ...formData, cedulaImagen: reader.result });
+            };
+            reader.readAsDataURL(file);
         }
     };
 
+    // --- Cuando cambia el rol del select ---
+    const handleRolChange = (e) => {
+        const valor = e.target.value;
+        setRol(valor);
+        setMostrarCampos(!!valor);
+    };
+
+    // --- Guardar el nuevo usuario ---
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('Formulario enviado (simulación)');
+
+        const nuevo = {
+            id: usuarios.length + 1,
+            rol: rol.charAt(0).toUpperCase() + rol.slice(1),
+            avatar: defaultAvatar,
+            ...formData,
+        };
+
+        const actualizados = [...usuarios, nuevo];
+        setUsuarios(actualizados);
+        localStorage.setItem('usuarios', JSON.stringify(actualizados));
+
+        alert('✅ Usuario agregado con éxito');
+        setFormData({});
+        setRol('');
+        setMostrarCampos(false);
     };
 
     return (
@@ -34,92 +67,93 @@ function AgregarUsuario() {
             </h2>
 
             <form className="user-form-card" onSubmit={handleSubmit}>
-                
-                {/* --- Avatar --- */}
-                <div className="avatar-section">
-                    <img src={defaultAvatar} alt="Avatar" className="avatar-img" />
-                    <button type="button" className="edit-avatar-btn"></button>
-                </div>
-
-                {/* --- Tarjeta para seleccionar rol --- */}
+                {/* --- Pestaña desplegable para elegir rol --- */}
                 <div className="rol-card">
                     <label htmlFor="rol" className="rol-label">
-                        ¿Qué es? <span className="hint">(Presiona Enter para confirmar)</span>
+                        ¿Qué es?
                     </label>
-                    <input
-                        type="text"
+                    <select
                         id="rol"
                         name="rol"
                         className="rol-input"
-                        placeholder="Doctor o Administrador y presiona Enter"
-                        onKeyDown={handleKeyDown}
-                    />
+                        value={rol}
+                        onChange={handleRolChange}
+                    >
+                        <option value="">Selecciona una opción</option>
+                        <option value="doctor">Doctor</option>
+                        <option value="administrador">Administrador</option>
+                    </select>
                 </div>
 
-                {/* --- Campos para DOCTOR --- */}
-                {mostrarCampos && rol === 'doctor' && (
+                {/* --- Campos según el rol elegido --- */}
+                {mostrarCampos && (
                     <div className="form-grid">
-                        <div className="form-group full-width">
-                            <label htmlFor="nombre">Nombre completo</label>
-                            <input type="text" id="nombre" name="nombre" placeholder="Ej. Nicolás Álvarez" />
-                        </div>
+                        {rol === 'doctor' && (
+                            <>
+                                <div className="form-group full-width">
+                                    <label>Nombre completo</label>
+                                    <input name="nombreCompleto" onChange={handleChange} />
+                                </div>
+                                <div className="form-group full-width">
+                                    <label>Correo</label>
+                                    <input type="email" name="correo" onChange={handleChange} />
+                                </div>
 
-                        <div className="form-group full-width">
-                            <label htmlFor="correo">Correo</label>
-                            <input type="email" id="correo" name="correo" placeholder="correo@ejemplo.com" />
-                        </div>
+                                {/* Campo modificado: subir imagen de la cédula */}
+                                <div className="form-group">
+                                    <label>Cédula profesional (imagen)</label>
+                                    <input
+                                        type="file"
+                                        name="cedula"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                    />
+                                </div>
 
-                        <div className="form-group">
-                            <label htmlFor="cedula">Cédula profesional</label>
-                            <input type="text" id="cedula" name="cedula" placeholder="1234567" />
-                        </div>
+                                <div className="form-group">
+                                    <label>Especialidad</label>
+                                    <input name="especialidad" onChange={handleChange} />
+                                </div>
+                                <div className="form-group">
+                                    <label>Teléfono</label>
+                                    <input name="telefono" onChange={handleChange} />
+                                </div>
+                                <div className="form-group full">
+                                    <label>Contraseña</label>
+                                    <input type="password" name="contraseña" onChange={handleChange} />
+                                </div>
+                                <div className="form-group full-width">
+                                    <label>Dirección</label>
+                                    <input name="direccion" onChange={handleChange} />
+                                </div>
+                            </>
+                        )}
 
-                        <div className="form-group">
-                            <label htmlFor="especialidad">Especialidad</label>
-                            <input type="text" id="especialidad" name="especialidad" placeholder="Cardiología, Pediatría..." />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="telefono">Teléfono de consultorio</label>
-                            <input type="tel" id="telefono" name="telefono" placeholder="+52 000 111 2222" />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="direccion">Dirección de consultorio</label>
-                            <input type="text" id="direccion" name="direccion" placeholder="Calle, número, colonia..." />
-                        </div>
-
-                        <div className="form-group full-width">
-                            <label htmlFor="contraseña">Contraseña</label>
-                            <input type="password" id="contraseña" name="contraseña" placeholder="********" />
-                        </div>
+                        {rol === 'administrador' && (
+                            <>
+                                <div className="form-group full-width">
+                                    <label>Correo</label>
+                                    <input type="email" name="correo" onChange={handleChange} />
+                                </div>
+                                <div className="form-group full-width">
+                                    <label>Nombre completo</label>
+                                    <input name="nombreCompleto" onChange={handleChange} />
+                                </div>
+                                <div className="form-group full-width">
+                                    <label>Contraseña</label>
+                                    <input type="password" name="contraseña" onChange={handleChange} />
+                                </div>
+                            </>
+                        )}
                     </div>
                 )}
 
-                {/* --- Campos para ADMINISTRADOR --- */}
-                {mostrarCampos && rol === 'administrador' && (
-                    <div className="form-grid">
-                        <div className="form-group full-width">
-                            <label htmlFor="correo">Correo</label>
-                            <input type="email" id="correo" name="correo" placeholder="correo@ejemplo.com" />
-                        </div>
-
-                        <div className="form-group full-width">
-                            <label htmlFor="nombre">Nombre completo</label>
-                            <input type="text" id="nombre" name="nombre" placeholder="Ej. Mariana López" />
-                        </div>
-
-                        <div className="form-group full-width">
-                            <label htmlFor="contraseña">Contraseña</label>
-                            <input type="password" id="contraseña" name="contraseña" placeholder="********" />
-                        </div>
-                    </div>
-                )}
-
-                {/* --- Botón Guardar --- */}
+                {/* --- Botón para guardar --- */}
                 {mostrarCampos && (
                     <div className="form-actions">
-                        <button type="submit" className="btn btn-primary">Guardar</button>
+                        <button type="submit" className="btn btn-primary">
+                            Guardar
+                        </button>
                     </div>
                 )}
             </form>
