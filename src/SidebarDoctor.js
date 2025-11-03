@@ -83,20 +83,6 @@ function SidebarDoctor({ isCollapsed, toggleSidebar, onNavigate }) {
                         </>
                     )}
                 </NavLink>
-                
-                {/* 4. Mi Perfil (Dejamos una opción extra para el perfil del doctor) */}
-                 <NavLink 
-                    to="/doctor/perfil" 
-                    className="nav-item"
-                    onClick={() => handleNavigationClick("/doctor/perfil", "Mi Perfil")}
-                >
-                    {({ isActive }) => (
-                        <>
-                            <img src={isActive ? editarAzul : editarNegro} alt="Perfil" />
-                            <span className="nav-text">Mi Perfil</span>
-                        </>
-                    )}
-                </NavLink>
 
             </nav>
 
