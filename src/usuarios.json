@@ -1,30 +1,9 @@
 [
   {
     "id": 1,
-    "rol": "Doctor",
-    "nombreCompleto": "Nicolás Alvarez",
-    "correo": "nicolas@hospital.com",
-    "cedulaImagen": "",
-    "especialidad": "Cardiología",
-    "telefono": "+52 111 222 3333",
-    "direccion": "Av. Salud #123",
-    "contraseña": "12345"
-  },
-  {
-    "id": 2,
     "rol": "Administrador",
-    "nombreCompleto": "Mariana Lopez",
-    "correo": "mariana@admin.com",
+    "nombreCompleto": "Administrador",
+    "correo": "admin@admin.com",
     "contraseña": "admin123"
-  },
-  {
-    "id": 3,
-    "rol": "Paciente",
-    "nombreCompleto": "Ana Gomez",
-    "sexo": "Femenino",
-    "telefono": "+52 555 888 9999",
-    "direccion": "Calle Paz 456",
-    "nacimiento": "1998-02-15",
-    "padecimiento": "Hipertensión"
   }
 ]
