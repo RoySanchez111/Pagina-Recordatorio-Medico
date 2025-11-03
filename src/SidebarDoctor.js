@@ -2,13 +2,12 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import './App.css'; 
 
-import logo from './assets/image.png'; 
 import usuariosAzul from './assets/usuarios-azul.png';
 import usuariosNegro from './assets/usuarios-negro.png';
 import agregarAzul from './assets/agregar-azul.png';
 import agregarNegro from './assets/agregar-negro.png';
-import editarAzul from './assets/editar-azul.png';
-import editarNegro from './assets/editar-negro.png';
+import consultasAzul from './assets/consultas-azul.png';
+import consultasNegro from './assets/consultas-negro.png';
 import salirImg from './assets/salir.png';
 import flechaImg from './assets/flecha-para-cerrar-barra.png';
 import recetaIconoAzul from './assets/editar-azul.png';
@@ -76,7 +75,7 @@ function SidebarDoctor({ isCollapsed, toggleSidebar }) {
                 >
                     {({ isActive }) => (
                         <>
-                            <img src={isActive ? editarAzul : editarNegro} alt="Agregar pacientes" />
+                            <img src={isActive ? agregarAzul : agregarNegro} alt="Agregar pacientes" />
                             <span className="nav-text">Agregar pacientes</span>
                         </>
                     )}
@@ -88,8 +87,8 @@ function SidebarDoctor({ isCollapsed, toggleSidebar }) {
                 >
                     {({ isActive }) => (
                         <>
-                            <img src={isActive ? usuariosAzul : usuariosNegro} alt="Gestionar Consultas" />
-                            <span className="nav-text">Gestionar Consultas</span>
+                            <img src={isActive ? consultasAzul : consultasNegro} alt="Gestionar Consultas" />
+                            <span className="nav-text">Consultas</span>
                         </>
                     )}
                 </NavLink>
