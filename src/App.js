@@ -7,13 +7,11 @@ import AgregarUsuario from './AgregarUsuario';
 import EditarUsuario from './EditarUsuario';
 import './App.css';
 
-// --- IMPORTAR LOS NUEVOS COMPONENTES DEL DOCTOR ---
 import VerPacientes from './VerPacientes';
 import AgregarPacientes from './AgregarPacientes';
 import AgregarReceta from './AgregarReceta'; 
-// --- (Ya no necesitas el import de AgregarReceta que tenías antes) ---
-
-// --- BORRASTE LOS CONST VERPACIENTES Y AGREGARPACIENTES DE EJEMPLO ---
+import VerRecetas from './VerRecetas';
+import GestionConsultas from './GestionConsultas';
 
 const ProtectedRoute = ({ children, rolPermitido }) => {
   const rol = localStorage.getItem('rol');
@@ -34,7 +32,6 @@ function App() {
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
 
-      {/* ADMIN */}
       <Route
         path="/dashboard/*"
         element={
@@ -49,7 +46,6 @@ function App() {
         <Route index element={<Usuarios />} />
       </Route>
 
-      {/* DOCTOR */}
       <Route
         path="/doctor/*"
         element={
@@ -58,10 +54,11 @@ function App() {
           </ProtectedRoute>
         }
       >
-        {/* Estas rutas ahora usarán los archivos importados */}
         <Route path="ver-pacientes" element={<VerPacientes />} />
         <Route path="agregar-pacientes" element={<AgregarPacientes />} />
         <Route path="agregar-receta" element={<AgregarReceta />} />
+        <Route path="ver-recetas" element={<VerRecetas />} />
+        <Route path="gestionar-consultas" element={<GestionConsultas />} />
         <Route path="perfil" element={<div>Mi Perfil del Doctor</div>} />
         <Route index element={<VerPacientes />} />
       </Route>

@@ -11,48 +11,44 @@ import editarAzul from './assets/editar-azul.png';
 import editarNegro from './assets/editar-negro.png';
 import salirImg from './assets/salir.png';
 import flechaImg from './assets/flecha-para-cerrar-barra.png';
+import recetaIconoAzul from './assets/editar-azul.png';
+import recetaIconoNegro from './assets/editar-negro.png';
+
 
 function SidebarDoctor({ isCollapsed, toggleSidebar }) { 
     const navigate = useNavigate();
 
     const handleLogout = () => {
+        localStorage.removeItem('rol');
+        localStorage.removeItem('nombre');
+        localStorage.removeItem('userId'); // Limpiar el ID al salir
         navigate('/login'); 
-    };
-
-    const handleNavigationClick = (path) => {
-        navigate(path);
     };
 
     return (
         <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
             
-            {/* --- LOGO --- */}
             <div className="logo-section">
                 <span className="logo-text">[ LOGO ]</span>
             </div>
 
-            {/* --- NAVEGACIÓN --- */}
             <nav className="nav-menu">
                 
-                {/* 1. Ver pacientes */}
                 <NavLink 
                     to="/doctor/ver-pacientes" 
                     className="nav-item"
-                    onClick={() => handleNavigationClick("/doctor/ver-pacientes")}
                 >
                     {({ isActive }) => (
                         <>
                             <img src={isActive ? usuariosAzul : usuariosNegro} alt="Ver pacientes" />
-                            <span className="nav-text">Ver pacientes</span>
+                            <span className="nav-text">Mis Pacientes</span>
                         </>
                     )}
                 </NavLink>
 
-                {/* 2. Agregar receta */}
                 <NavLink 
                     to="/doctor/agregar-receta" 
                     className="nav-item"
-                    onClick={() => handleNavigationClick("/doctor/agregar-receta")}
                 >
                     {({ isActive }) => (
                         <>
@@ -62,11 +58,21 @@ function SidebarDoctor({ isCollapsed, toggleSidebar }) {
                     )}
                 </NavLink>
 
-                {/* 3. Agregar pacientes */}
+                <NavLink 
+                    to="/doctor/ver-recetas" 
+                    className="nav-item"
+                >
+                    {({ isActive }) => (
+                        <>
+                            <img src={isActive ? recetaIconoAzul : recetaIconoNegro} alt="Ver recetas" />
+                            <span className="nav-text">Mis Recetas</span>
+                        </>
+                    )}
+                </NavLink>
+
                 <NavLink 
                     to="/doctor/agregar-pacientes" 
                     className="nav-item"
-                    onClick={() => handleNavigationClick("/doctor/agregar-pacientes")}
                 >
                     {({ isActive }) => (
                         <>
@@ -75,9 +81,20 @@ function SidebarDoctor({ isCollapsed, toggleSidebar }) {
                         </>
                     )}
                 </NavLink>
+
+                <NavLink 
+                    to="/doctor/gestionar-consultas" 
+                    className="nav-item"
+                >
+                    {({ isActive }) => (
+                        <>
+                            <img src={isActive ? usuariosAzul : usuariosNegro} alt="Gestionar Consultas" />
+                            <span className="nav-text">Gestionar Consultas</span>
+                        </>
+                    )}
+                </NavLink>
             </nav>
 
-            {/* --- SALIR Y TOGGLE --- */}
             <div className="sidebar-footer">
                 <div className="nav-item logout-btn" onClick={handleLogout}>
                     <img src={salirImg} alt="Salir" />

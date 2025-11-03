@@ -26,6 +26,12 @@ function AgregarPacientes() {
             return;
         }
 
+        const doctorId = parseInt(localStorage.getItem('userId'));
+        if (!doctorId) {
+            alert('Error: No se pudo identificar al doctor. Por favor, inicie sesión de nuevo.');
+            return;
+        }
+
         const usuariosActuales = JSON.parse(localStorage.getItem('usuarios')) || usuariosData;
 
         const nuevoPaciente = {
@@ -36,7 +42,8 @@ function AgregarPacientes() {
             telefono: formData.telefono,
             direccion: formData.direccion,
             nacimiento: formData.nacimiento,
-            padecimiento: formData.enfermedadesCronicas
+            padecimiento: formData.enfermedadesCronicas,
+            doctorId: doctorId 
         };
 
         const usuariosActualizados = [...usuariosActuales, nuevoPaciente];

@@ -21,11 +21,17 @@ function AgregarReceta() {
   const [diagnostico, setDiagnostico] = useState("");
   const [observaciones, setObservaciones] = useState("");
   const [medicamentoAEditar, setMedicamentoAEditar] = useState(null);
+  const [doctorId, setDoctorId] = useState(null);
 
   useEffect(() => {
+    const loggedInDoctorId = parseInt(localStorage.getItem('userId'));
+    setDoctorId(loggedInDoctorId);
+    
     const guardados = JSON.parse(localStorage.getItem('usuarios')) || usuariosData;
-    const pacientesFiltrados = guardados.filter(u => u.rol === 'Paciente');
-    setPacientes(pacientesFiltrados);
+    const pacientesDelDoctor = guardados.filter(u => 
+        u.rol === 'Paciente' && u.doctorId === loggedInDoctorId
+    );
+    setPacientes(pacientesDelDoctor);
   }, []);
 
   const handleSaveMedicamento = (medicamentoGuardado) => {
@@ -92,7 +98,8 @@ function AgregarReceta() {
       fecha: fecha,
       diagnostico: diagnostico,
       observaciones: observaciones,
-      medicamentos: medicamentos
+      medicamentos: medicamentos,
+      doctorId: doctorId
     };
 
     const recetasActuales = JSON.parse(localStorage.getItem('recetasGuardadas')) || [];

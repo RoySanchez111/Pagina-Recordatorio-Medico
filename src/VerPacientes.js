@@ -3,78 +3,47 @@ import './App.css';
 import usuariosData from './usuarios.json'; 
 import usuariosAzul from './assets/usuarios-azul.png'; 
 
-const IconoArrowUp = () => <span style={{ fontSize: '0.8em' }}>&#9650;</span>;
-const IconoArrowDown = () => <span style={{ fontSize: '0.8em' }}>&#9660;</span>;
-
 function VerPacientes() {
-  const [usuarios, setUsuarios] = useState([]); 
+  const [pacientes, setPacientes] = useState([]);
+  const [recetas, setRecetas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filtro, setFiltro] = useState('Todos');
-  const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'ascending' });
+  const [pacienteExpandidoId, setPacienteExpandidoId] = useState(null);
 
   useEffect(() => {
-    const guardados = JSON.parse(localStorage.getItem('usuarios'));
-    let datosFinales = [];
+    const loggedInDoctorId = parseInt(localStorage.getItem('userId'));
 
-    if (guardados && guardados.length > 0) { 
-      datosFinales = guardados;
-    } else {
-      datosFinales = usuariosData;
-      localStorage.setItem('usuarios', JSON.stringify(usuariosData));
-    }
+    const guardados = JSON.parse(localStorage.getItem('usuarios')) || usuariosData;
 
-    // 🔹 Asignar IDs automáticos si no existen
-    datosFinales = datosFinales.map((u, i) => ({
-      id: u.id ?? i + 1,
-      // 🔹 CAMBIO: Asegurar que nombreCompleto exista para ordenar
-      // Si no existe, lo crea a partir de otros campos
+    const pacientesDelDoctor = guardados.filter(u => 
+        u.rol === 'Paciente' && u.doctorId === loggedInDoctorId
+    ).map((u, i) => ({ 
       ...u,
-      nombreCompleto: u.nombreCompleto || u.nombre || u.nombrePaciente || 'Sin nombre'
+      id: u.id ?? `temp-${i}`,
+      nombreCompleto: u.nombreCompleto || u.nombre || 'Sin nombre'
     }));
-
-    setUsuarios(datosFinales);
+    
+    setPacientes(pacientesDelDoctor);
+    
+    const recetasGuardadas = JSON.parse(localStorage.getItem('recetasGuardadas')) || [];
+    setRecetas(recetasGuardadas);
+    
     setIsLoading(false);
   }, []);
 
-  const pacientes = usuarios.filter(u => u.rol === 'Paciente');
-
-  const sortedPacientes = React.useMemo(() => {
-    let sortablePacientes = [...pacientes]; 
-    if (sortConfig.key) {
-      sortablePacientes.sort((a, b) => {
-        // Manejar posibles indefinidos en la clave de ordenamiento
-        const valA = a[sortConfig.key] || ''; 
-        const valB = b[sortConfig.key] || '';
-
-        if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
-        if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
-        return 0;
-      });
+  const toggleRecetas = (pacienteId) => {
+    if (pacienteExpandidoId === pacienteId) {
+      setPacienteExpandidoId(null); 
+    } else {
+      setPacienteExpandidoId(pacienteId); 
     }
-    return sortablePacientes;
-  }, [pacientes, sortConfig]);
-
-  const requestSort = (key) => {
-    let direction = 'ascending';
-    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
-    setSortConfig({ key, direction });
   };
-
-  const handleFiltroClick = (tipo) => {
-    setFiltro(tipo);
-    if (tipo === 'A-Z') requestSort('nombreCompleto');
-    else if (tipo === 'ID') requestSort('id');
-    else if (tipo === 'Todos') setSortConfig({ key: 'id', direction: 'ascending' }); // 🔹 CAMBIO: 'Todos' resetea a ID ascendente
-  };
-
+  
   if (isLoading) {
     return (
       <div className="usuarios-container">
         <h2 className="page-title">
           <img src={usuariosAzul} alt="Pacientes" />
-          Ver pacientes
+          Mis pacientes
         </h2>
         <p style={{ padding: '20px', textAlign: 'center' }}>
           Cargando pacientes...
@@ -82,90 +51,76 @@ function VerPacientes() {
       </div>
     );
   }
+  
+  const pacientesOrdenados = [...pacientes].sort((a, b) => 
+      a.nombreCompleto.localeCompare(b.nombreCompleto)
+  );
 
   return (
     <div className="usuarios-container">
       <h2 className="page-title">
         <img src={usuariosAzul} alt="Pacientes" />
-        Ver pacientes
+        Mis pacientes
       </h2>
 
-      <div className="filter-buttons">
-        <button
-          className={`filter-btn ${filtro === 'Todos' ? 'active' : ''}`}
-          onClick={() => handleFiltroClick('Todos')}
-        >
-          Todos
-        </button>
-        
-        <button
-          className={`filter-btn ${filtro === 'A-Z' ? 'active' : ''}`}
-          onClick={() => handleFiltroClick('A-Z')}
-          style={{ display: 'flex', alignItems: 'center', gap: '5px' }} 
-        >
-          A-Z
-          {sortConfig.key === 'nombreCompleto' ? 
-            (sortConfig.direction === 'ascending' ? <IconoArrowUp /> : <IconoArrowDown />) : 
-            (<><IconoArrowUp /><IconoArrowDown /></>)
-          }
-        </button>
+      <div className="lista-items-container">
 
-        <button
-          className={`filter-btn ${filtro === 'Fecha' ? 'active' : ''}`}
-          onClick={() => handleFiltroClick('Fecha')}
-        >
-          Fecha
-        </button>
-        <button
-          className={`filter-btn ${filtro === 'ID' ? 'active' : ''}`}
-          onClick={() => handleFiltroClick('ID')}
-          style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
-        >
-          ID 
-          {sortConfig.key === 'id' ? 
-            (sortConfig.direction === 'ascending' ? <IconoArrowUp /> : <IconoArrowDown />) : 
-            (<><IconoArrowUp /><IconoArrowDown /></>)
-          }
-        </button>
-      </div>
+        {pacientesOrdenados.length === 0 && (
+            <p style={{ textAlign: 'center' }}>No tienes pacientes registrados.</p>
+        )}
 
-      <div className="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nombre</th>
-              <th>Diagnóstico (Padecimiento)</th>
-              <th>Rol</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedPacientes.length > 0 ? (
-              sortedPacientes.map(paciente => {
-                const nombre = paciente.nombreCompleto;
-                return (
-                  <tr key={paciente.id}>
-                    <td>{paciente.id}</td>
-                    <td>{nombre}</td>
-                    <td>{paciente.padecimiento || 'N/A'}</td>
-                    <td>{paciente.rol}</td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan="4" style={{ textAlign: 'center' }}>
-                  No hay pacientes registrados.
-                </td>
-              </tr>
-            )}
-            {Array.from({ length: Math.max(0, 5 - sortedPacientes.length) }).map((_, i) => (
-              <tr key={`empty-${i}`}>
-                <td colSpan="4" style={{ height: '50px' }}>&nbsp;</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {pacientesOrdenados.map(paciente => {
+          const recetasDelPaciente = recetas.filter(r => r.pacienteId === paciente.id);
+          const isExpandido = pacienteExpandidoId === paciente.id;
+
+          return (
+            <div key={paciente.id} className="item-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h4>{paciente.nombreCompleto}</h4>
+                  <p><strong>Padecimiento:</strong> {paciente.padecimiento || 'N/A'}</p>
+                  <p style={{fontSize: '0.9rem', color: '#555'}}>
+                    ID: {paciente.id} | Tel: {paciente.telefono || 'N/A'}
+                  </p>
+                </div>
+                <button 
+                  className={`btn ${isExpandido ? 'btn-secondary' : 'btn-primary'}`}
+                  onClick={() => toggleRecetas(paciente.id)}
+                >
+                  {isExpandido ? 'Ocultar' : 'Ver Recetas'} ({recetasDelPaciente.length})
+                </button>
+              </div>
+
+              {isExpandido && (
+                <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                  <h5>Historial de Recetas:</h5>
+                  {recetasDelPaciente.length === 0 ? (
+                    <p style={{fontSize: '0.9rem', color: '#777'}}>No hay recetas para este paciente.</p>
+                  ) : (
+                    [...recetasDelPaciente].reverse().map(receta => (
+                      <div key={receta.id} style={{ border: '1px solid #f0f0f0', borderRadius: '8px', padding: '15px', marginBottom: '10px' }}>
+                        <p style={{ margin: 0, fontWeight: 'bold' }}>
+                          Fecha: {receta.fecha} - Diag: {receta.diagnostico}
+                        </p>
+                        <div className="medicamentos-list" style={{maxHeight: 'none', padding: '5px 0 0 0'}}>
+                          {receta.medicamentos.map((med, i) => (
+                             <div key={i} className="medicamento-item" style={{padding: '8px', background: '#f9f9f9'}}>
+                               <div className="medicamento-info">
+                                 <strong>{med.nombre}</strong>
+                                 <p>{med.dosis} • {med.frecuencia} • {med.duracion}</p>
+                               </div>
+                             </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+            </div>
+          );
+        })}
       </div>
     </div>
   );
