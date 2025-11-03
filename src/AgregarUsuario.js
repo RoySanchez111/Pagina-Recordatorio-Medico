@@ -18,14 +18,25 @@ function AgregarUsuario() {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // --- Manejar carga de archivo (imagen de cédula) ---
+    // --- Manejar carga de archivo (cédula en PDF) ---
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Verificar que sea un PDF
+            if (file.type !== 'application/pdf') {
+                alert('Por favor, selecciona un archivo PDF');
+                e.target.value = ''; // Limpiar el input
+                return;
+            }
+            
             const reader = new FileReader();
             reader.onloadend = () => {
-                // Guardamos la imagen como base64 para poder mostrarla o guardarla
-                setFormData({ ...formData, cedulaImagen: reader.result });
+                // Guardamos el PDF como base64 para poder almacenarlo
+                setFormData({ 
+                    ...formData, 
+                    cedulaPDF: reader.result,
+                    cedulaNombre: file.name // Guardamos también el nombre del archivo
+                });
             };
             reader.readAsDataURL(file);
         }
@@ -99,15 +110,18 @@ function AgregarUsuario() {
                                     <input type="email" name="correo" onChange={handleChange} />
                                 </div>
 
-                                {/* Campo modificado: subir imagen de la cédula */}
+                                {/* Campo modificado: subir PDF de la cédula */}
                                 <div className="form-group">
-                                    <label>Cédula profesional (imagen)</label>
+                                    <label>Cédula profesional (PDF)</label>
                                     <input
                                         type="file"
                                         name="cedula"
-                                        accept="image/*"
+                                        accept=".pdf,application/pdf"
                                         onChange={handleFileChange}
                                     />
+                                    {formData.cedulaNombre && (
+                                        <p className="file-name">Archivo seleccionado: {formData.cedulaNombre}</p>
+                                    )}
                                 </div>
 
                                 <div className="form-group">
