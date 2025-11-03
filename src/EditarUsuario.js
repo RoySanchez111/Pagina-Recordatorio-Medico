@@ -49,7 +49,7 @@ function EditarUsuario() {
         });
     };
 
-    // --- Cargar nuevo PDF de cédula ---
+    // --- Cargar nueva imagen de cédula ---
     const handleCedulaImageChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -58,7 +58,7 @@ function EditarUsuario() {
         reader.onloadend = () => {
             setEditableFields({
                 ...editableFields,
-                cedulaImagen: reader.result, // Guardamos el PDF como base64
+                cedulaImagen: reader.result, // Guardamos la imagen en base64
             });
         };
         reader.readAsDataURL(file);
@@ -112,14 +112,14 @@ function EditarUsuario() {
                             />
                         </div>
 
-                        {/* --- Vista de PDF de cédula --- */}
+                        {/* --- Vista de imagen de cédula --- */}
                         <div className="form-group full-width">
-                        <label>Cédula Profesional (PDF)</label>
+                        <label>Cédula Profesional (Imagen)</label>
 
-                        {/* --- Vista de PDF de cédula --- */}
+                        {/* --- Vista de imagen de cédula --- */}
                         <div className="preview-wrapper">
                             <img
-                            src={defaultAvatar}
+                            src={editableFields.cedulaImagen || defaultAvatar}
                             alt="Cédula profesional"
                             className="preview-image"
                             />
@@ -127,7 +127,7 @@ function EditarUsuario() {
 
                         <input
                             type="file"
-                            accept=".pdf,application/pdf"
+                            accept="image/*"
                             onChange={handleCedulaImageChange}
                         />
                         </div>
