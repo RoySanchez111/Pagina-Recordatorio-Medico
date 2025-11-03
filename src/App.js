@@ -2,25 +2,18 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login';
 import DashboardLayoutAdmin from './DashboardLayoutAdmin';
 import DashboardLayoutDoctor from './DashboardLayoutDoctor';
-import AgregarReceta from './AgregarReceta';
 import Usuarios from './Usuarios';
 import AgregarUsuario from './AgregarUsuario';
 import EditarUsuario from './EditarUsuario';
 import './App.css';
 
-const VerPacientes = () => (
-  <div className="view-container active">
-    <h3>Vista: Ver pacientes</h3>
-    <p>Aquí se renderizará la tabla de pacientes.</p>
-  </div>
-);
+// --- IMPORTAR LOS NUEVOS COMPONENTES DEL DOCTOR ---
+import VerPacientes from './VerPacientes';
+import AgregarPacientes from './AgregarPacientes';
+import AgregarReceta from './AgregarReceta'; 
+// --- (Ya no necesitas el import de AgregarReceta que tenías antes) ---
 
-const AgregarPacientes = () => (
-  <div className="view-container active">
-    <h3>Vista: Agregar pacientes</h3>
-    <p>Aquí se renderizará el formulario completo para añadir un nuevo paciente.</p>
-  </div>
-);
+// --- BORRASTE LOS CONST VERPACIENTES Y AGREGARPACIENTES DE EJEMPLO ---
 
 const ProtectedRoute = ({ children, rolPermitido }) => {
   const rol = localStorage.getItem('rol');
@@ -65,6 +58,7 @@ function App() {
           </ProtectedRoute>
         }
       >
+        {/* Estas rutas ahora usarán los archivos importados */}
         <Route path="ver-pacientes" element={<VerPacientes />} />
         <Route path="agregar-pacientes" element={<AgregarPacientes />} />
         <Route path="agregar-receta" element={<AgregarReceta />} />

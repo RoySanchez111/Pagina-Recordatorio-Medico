@@ -1,58 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './SidebarDoctor'; // Importamos el Sidebar
 import './App.css'; // Usa el CSS global
 
-// Renombrado para reflejar el contexto del doctor
 function DoctorDashboardLayout() {
-    // Estado para colapsar la barra lateral (manteniendo la funcionalidad existente)
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     
-    // **NUEVO ESTADO:** Guarda el título actual de la vista (ej: "Ver pacientes")
-    const [currentTitle, setCurrentTitle] = useState("Ver pacientes");
+    // --- NUEVO ESTADO PARA EL NOMBRE DEL DOCTOR ---
+    const [doctorName, setDoctorName] = useState('Doctor'); // Valor por defecto
 
-    // Función para cambiar el estado de colapsado
+    // --- Cargar nombre del doctor al montar ---
+    useEffect(() => {
+        // 'nombre' debe coincidir con la 'key' que guardas en Login.js
+        const nombreGuardado = localStorage.getItem('nombre'); 
+        if (nombreGuardado) {
+            // Tomamos solo el primer nombre (Ej. "Nicolás" de "Nicolás Alvarez")
+            setDoctorName(nombreGuardado.split(' ')[0]); 
+        }
+    }, []); // Se ejecuta solo una vez al cargar el layout
+
     const toggleSidebar = () => {
         setIsSidebarCollapsed(!isSidebarCollapsed);
     };
 
-    // La función que recibe el Sidebar para actualizar el título
-    const handleNavigation = (newTitle) => {
-        setCurrentTitle(newTitle);
-    };
+    // --- IMPORTANTE ---
+    // Eliminamos 'currentTitle', 'handleNavigation' y la prop 'onNavigate' del Sidebar.
+    // El título ahora vivirá dentro de cada componente (VerPacientes, AgregarReceta, etc.)
+    // para imitar el layout del Admin.
 
     return (
         <div className="dashboard-container">
-            {/* El Sidebar ahora recibe la función handleNavigation 
-                para actualizar el título principal.
-            */}
             <Sidebar 
                 isCollapsed={isSidebarCollapsed} 
                 toggleSidebar={toggleSidebar}
-                onNavigate={handleNavigation} // <-- Propiedad clave para actualizar el título
+                // onNavigate ya no se pasa
             />
             
             <main className={`main-content ${isSidebarCollapsed ? 'collapsed' : ''}`}>
                 
-                {/* 1. Cabecera (Header) - Editada para mostrar el título dinámico y el doctor */}
+                {/* 1. Cabecera (Header) - MODIFICADA */}
                 <header className="main-header">
+                    {/* EL TÍTULO AZUL (.view-title) SE HA ELIMINADO DE AQUÍ.
+                      Ahora usaremos .page-title dentro de cada componente hijo
+                      para que coincida con el diseño del Admin.
+                    */}
                     <div className="header-title-section">
-                        {/* Título de la vista (el texto azul que cambia) */}
-                        <h2 className="view-title">{currentTitle}</h2>
-                        {/* Línea divisora */}
-                        <div className="title-separator"></div> 
+                        {/* Esta sección ahora está vacía */}
                     </div>
 
-                    {/* Información del Doctor (César Médico) */}
+                    {/* Información del Doctor (AHORA DINÁMICO) */}
                     <div className="doctor-info">
-                        <span className="doctor-name">César</span>
+                        {/* Se usa el estado 'doctorName' */}
+                        <span className="doctor-name">{doctorName}</span>
                         <span className="doctor-title">Médico</span>
                     </div>
                 </header>
 
                 {/* 2. Contenido de la Página */}
                 <div className="page-content">
-                    {/* Aquí se renderizan las rutas hijas (Usuarios, Agregar, etc.) */}
                     <Outlet />
                 </div>
 

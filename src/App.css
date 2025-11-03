@@ -317,8 +317,10 @@
 /* --- 4b. Página Usuarios (Filtros, Tabla) --- */
 .filter-buttons {
     margin-bottom: 20px;
+    display: flex; /* <-- AÑADE ESTO */
+    align-items: center; /* <-- AÑADE ESTO */
+    gap: 10px; /* <-- AÑADE ESTO (o manten 'margin-right' en .filter-btn) */
 }
-
 .filter-btn {
     padding: 10px 20px;
     margin-right: 10px;
@@ -703,4 +705,116 @@ tbody tr:hover {
 
 .status-reprogramada {
     background-color: #dc3545; /* Rojo */
+}
+/* =========================================
+    6. ESTILOS PARA DOCTOR (RECETA Y MODAL)
+   ========================================= */
+
+/* --- Lista de Medicamentos (AgregarReceta.js) --- */
+.medicamentos-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    max-height: 200px; /* Altura máxima antes de scroll */
+    overflow-y: auto;
+    padding: 5px;
+}
+
+.medicamento-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 12px 15px;
+}
+
+.medicamento-info p {
+    margin: 4px 0 0 0;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.medicamento-actions {
+    display: flex;
+    gap: 15px;
+    font-size: 1.1rem;
+}
+
+/* --- Modal (AgregarMedicamento.js) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro semitransparente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 100%;
+    max-width: 500px;
+    overflow: hidden; /* Para que el header se vea bien */
+}
+
+.modal-header {
+    background-color: #6a8dff; /* Azul como el sidebar */
+    color: white;
+    padding: 20px 25px;
+    text-align: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.modal-body {
+    padding: 25px 30px;
+}
+
+/* Reusar .form-actions dentro del modal */
+.modal-body .form-actions {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+/* Botón secundario (Cancelar) */
+.btn-secondary {
+    background-color: #f0f0f0;
+    color: #555;
+    border: 1px solid #ddd;
+}
+.btn-secondary:hover {
+    background-color: #e0e0e0;
+}
+
+/* Estilo genérico para <textarea> */
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    color: #333;
+    font-family: inherit; /* Heredar la fuente */
+    resize: vertical; /* Permitir redimensionar verticalmente */
+    box-sizing: border-box; /* Importante */
+    min-height: 80px;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: #6a8dff;
+    box-shadow: 0 0 0 2px #e4e9ff;
 }

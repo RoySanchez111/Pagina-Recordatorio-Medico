@@ -1,219 +1,160 @@
-import React, { useState } from 'react';
-// Asegúrate de que este archivo CSS contenga los estilos de los formularios y el modal
-import './App.css'; 
+import React, { useState, useEffect } from 'react';
+import './App.css';
+import ModalMedicamento from './AgregarMedicamento'; 
+import usuariosData from './usuarios.json';
+import editarAzul from './assets/editar-azul.png'; 
 
-// ===========================================
-// 1. Componente del Modal para Agregar Medicamento
-// ===========================================
-const MedicamentoModal = ({ isOpen, onClose, onAddMedicamento }) => {
-    // Usamos useState para manejar los datos del formulario del modal
-    const [nombre, setNombre] = useState('');
-    const [dosis, setDosis] = useState('');
-    const [frecuencia, setFrecuencia] = useState('');
-    const [duracion, setDuracion] = useState('');
-    const [instrucciones, setInstrucciones] = useState('');
-
-    if (!isOpen) return null; // Si no está abierto, no renderizar nada
-
-    const handleAdd = () => {
-        if (nombre && dosis && frecuencia && duracion) {
-            const newMed = {
-                id: Date.now(), // ID único para las claves de React
-                nombre,
-                dosis,
-                frecuencia,
-                duracion,
-                instrucciones
-            };
-            
-            // Llama a la función del componente padre para añadir el medicamento
-            onAddMedicamento(newMed);
-            
-            // Limpiar campos del modal y cerrar
-            setNombre('');
-            setDosis('');
-            setFrecuencia('');
-            setDuracion('');
-            setInstrucciones('');
-            onClose();
-        } else {
-            alert('Por favor, complete los campos principales del medicamento.');
-        }
-    };
-    
-    // El modal usa las clases CSS ya definidas (modal-overlay, modal-content, etc.)
-    return (
-        <div className="modal-overlay"> 
-            <div className="modal-content">
-                <h2>AGREGAR MEDICAMENTO</h2>
-                <div className="form-group-full">
-                    <label>Nombre del Medicamento</label>
-                    <input 
-                        type="text" 
-                        value={nombre}
-                        onChange={(e) => setNombre(e.target.value)}
-                    />
-                </div>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Dosis</label>
-                        <input 
-                            type="text" 
-                            value={dosis}
-                            onChange={(e) => setDosis(e.target.value)}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Frecuencia</label>
-                        <input 
-                            type="text" 
-                            value={frecuencia}
-                            onChange={(e) => setFrecuencia(e.target.value)}
-                        />
-                    </div>
-                </div>
-                <div className="form-group-full">
-                    <label>Duración del Tratamiento</label>
-                    <input 
-                        type="text" 
-                        value={duracion}
-                        onChange={(e) => setDuracion(e.target.value)}
-                    />
-                </div>
-                <div className="form-group-full">
-                    <label>Instrucciones Especiales</label>
-                    <textarea 
-                        value={instrucciones}
-                        onChange={(e) => setInstrucciones(e.target.value)}
-                    ></textarea>
-                </div>
-                <div className="modal-actions">
-                    <button className="btn-secondary" onClick={onClose}>Cerrar</button>
-                    <button className="btn-primary" onClick={handleAdd}>Agregar</button>
-                </div>
-            </div>
-        </div>
-    );
+// --- Función para obtener la fecha de hoy ---
+const getTodayDate = () => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 };
 
-
-// ===========================================
-// 2. Componente principal de la vista "Agregar Receta"
-// ===========================================
 function AgregarReceta() {
-    // Estado para controlar la lista de medicamentos en la receta
-    const [medicamentos, setMedicamentos] = useState([
-        // Ejemplo de medicamento cargado inicialmente
-        { 
-            id: 1, 
-            nombre: "Paracitamol 500mg", 
-            dosis: "1 cápsula", 
-            frecuencia: "cada 8 horas", 
-            duracion: "7 días", 
-            instrucciones: "" 
-        } 
-    ]);
+  const [pacientes, setPacientes] = useState([]);
+  const [medicamentos, setMedicamentos] = useState([
+    {
+      nombre: "Paracetamol 500mg",
+      dosis: "1 cápsula",
+      frecuencia: "cada 8 horas",
+      duracion: "7 días",
+      instrucciones: ""
+    }
+  ]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPaciente, setSelectedPaciente] = useState("");
+  const [fecha, setFecha] = useState(getTodayDate());
+  const [diagnostico, setDiagnostico] = useState("");
+  const [observaciones, setObservaciones] = useState("");
 
-    // Estado para controlar la visibilidad del modal
-    const [isModalOpen, setIsModalOpen] = useState(false);
+  useEffect(() => {
+    const guardados = JSON.parse(localStorage.getItem('usuarios')) || usuariosData;
+    const pacientesFiltrados = guardados.filter(u => u.rol === 'Paciente');
+    setPacientes(pacientesFiltrados);
+  }, []);
 
-    // Función para añadir un nuevo medicamento a la lista
-    const handleAddMedicamento = (newMed) => {
-        setMedicamentos(prevMeds => [
-            ...prevMeds,
-            newMed
-        ]);
-    };
+  const handleAddMedicamento = (nuevo) => {
+    setMedicamentos(prev => [...prev, nuevo]);
+  };
 
-    // Función para eliminar un medicamento de la lista
-    const handleDeleteMedicamento = (id) => {
-        setMedicamentos(prevMeds => prevMeds.filter(med => med.id !== id));
-    };
+  const handleRemoveMedicamento = (index) => {
+    if (window.confirm(`¿Seguro que quieres eliminar ${medicamentos[index].nombre}?`)) {
+      setMedicamentos(prev => prev.filter((_, i) => i !== index));
+    }
+  };
 
-    // Función para dar formato al texto del medicamento (como en el diseño)
-    const formatMedicamentoText = (med) => {
-        return `${med.nombre} - ${med.dosis} ${med.frecuencia} - Duración: ${med.duracion}`;
-    };
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    alert('Receta guardada (simulación)');
+  };
 
-    const handleSaveReceta = () => {
-        // Lógica de guardado (simulación)
-        alert(`Receta lista para guardar. Total de medicamentos: ${medicamentos.length}`);
-    };
+  return (
+    <div className="form-usuario-container">
+      <h2 className="page-title">
+        <img src={editarAzul} alt="Agregar Receta" />
+        Agregar receta
+      </h2>
 
-    return (
-        // Usamos la clase 'view-container' para el fondo blanco y la sombra
-        <div className="view-container active"> 
-            
-            <div className="receta-form-container">
-                
-                {/* Nota: La imagen de perfil del doctor y el icono de '+' se omiten 
-                   para centrarnos en la funcionalidad del formulario y el modal */}
-                
-                <div className="form-content">
-                    
-                    {/* Campos de la Receta */}
-                    <div className="form-group-full">
-                        <label>Nombre(s)</label>
-                        <input type="text" defaultValue="Rafael Flores Lopez" />
-                    </div>
-                    
-                    <div className="form-group-full">
-                        <label>Fecha de Emisión</label>
-                        <input type="date" defaultValue="2025-10-29" />
-                    </div>
-                    
-                    <div className="form-group-full">
-                        <label>Diagnóstico Principal</label>
-                        <input type="text" defaultValue="Infección respiratoria superior" />
-                    </div>
-                    
-                    <div className="form-group-full">
-                        <label>Observaciones</label>
-                        <textarea defaultValue="Paciente con fiebre y tos persistente, se recomienda reposo y aumento de líquidos."></textarea>
-                    </div>
-                    
-                    {/* Sección de Medicamentos */}
-                    <h4>Medicamentos</h4>
-                    <div id="medicamentos-list">
-                        {medicamentos.map(med => (
-                            <div key={med.id} className="medicamento-item">
-                                <span>{formatMedicamentoText(med)}</span>
-                                {/* Botón para eliminar */}
-                                <button type="button" onClick={() => handleDeleteMedicamento(med.id)}>
-                                    🗑️
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                    
-                    {/* Botón "+ Agregar Medicamento" que abre el modal */}
-                    <button 
-                        className="btn-primary" 
-                        onClick={() => setIsModalOpen(true)}
-                        style={{ marginTop: '20px' }} 
-                    >
-                        + Agregar Medicamento
-                    </button>
-                    
-                    {/* Botón para Guardar la Receta (opcional, para completar el flujo) */}
-                    <button 
-                        className="btn-primary" 
-                        onClick={handleSaveReceta}
-                        style={{ marginTop: '10px', backgroundColor: '#4CAF50' }} 
-                    >
-                        Guardar Receta
-                    </button>
-                </div>
-            </div>
-            
-            {/* 3. Renderizado del Modal */}
-            <MedicamentoModal 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                onAddMedicamento={handleAddMedicamento} 
+      <div className="user-form-card">
+        <form onSubmit={handleFormSubmit}>
+          <div className="form-group">
+            <label>Nombre(s)</label>
+            <select 
+              className="rol-input" 
+              value={selectedPaciente}
+              onChange={(e) => setSelectedPaciente(e.target.value)}
+            >
+              <option value="" disabled>Selecciona un paciente</option>
+              {pacientes.map(p => (
+                <option key={p.id} value={p.id}>
+                  {p.nombreCompleto} (ID: {p.id})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Fecha de Emisión</label>
+            <input 
+              type="date" 
+              value={fecha}
+              onChange={(e) => setFecha(e.target.value)}
             />
-        </div>
-    );
+          </div>
+          
+          <div className="form-group">
+            <label>Diagnóstico Principal</label>
+            <input 
+              type="text" 
+              value={diagnostico}
+              onChange={(e) => setDiagnostico(e.target.value)}
+              placeholder="Infección respiratoria superior"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Observaciones</label>
+            <textarea 
+              rows="4" 
+              value={observaciones}
+              onChange={(e) => setObservaciones(e.target.value)}
+              placeholder="Paciente con fiebre y tos persistente, se recomienda reposo y aumento de líquidos."
+            ></textarea>
+          </div>
+          
+          <div className="form-group">
+            <label>Medicamentos</label>
+            <div className="medicamentos-list">
+              {medicamentos.length > 0 ? medicamentos.map((med, index) => (
+                <div key={index} className="medicamento-item">
+                  <div className="medicamento-info">
+                    <strong>{med.nombre}</strong>
+                    <p>{med.dosis} • {med.frecuencia} • Duración: {med.duracion}</p>
+                  </div>
+                  <div className="medicamento-actions">
+                    <button 
+                      type="button" 
+                      className="btn-secundario" 
+                      onClick={() => alert('Editar medicamento (no implementado)')}
+                    >
+                      Editar
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn-eliminar" 
+                      onClick={() => handleRemoveMedicamento(index)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              )) : (
+                <p style={{textAlign: 'center', color: '#777'}}>No hay medicamentos agregados.</p>
+              )}
+            </div>
+          </div>
+
+          <button 
+            type="button" 
+            className="btn"
+            style={{width: '100%', backgroundColor: '#e4e9ff', color: '#4a6fff', fontWeight: 'bold'}}
+            onClick={() => setIsModalOpen(true)}
+          >
+            + Agregar Medicamento
+          </button>
+        </form>
+      </div>
+
+      <ModalMedicamento 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAdd={handleAddMedicamento}
+      />
+    </div>
+  );
 }
 
 export default AgregarReceta;
