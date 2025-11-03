@@ -26,7 +26,10 @@ function VerPacientes() {
     // 🔹 Asignar IDs automáticos si no existen
     datosFinales = datosFinales.map((u, i) => ({
       id: u.id ?? i + 1,
-      ...u
+      // 🔹 CAMBIO: Asegurar que nombreCompleto exista para ordenar
+      // Si no existe, lo crea a partir de otros campos
+      ...u,
+      nombreCompleto: u.nombreCompleto || u.nombre || u.nombrePaciente || 'Sin nombre'
     }));
 
     setUsuarios(datosFinales);
@@ -39,8 +42,12 @@ function VerPacientes() {
     let sortablePacientes = [...pacientes]; 
     if (sortConfig.key) {
       sortablePacientes.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'ascending' ? -1 : 1;
-        if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'ascending' ? 1 : -1;
+        // Manejar posibles indefinidos en la clave de ordenamiento
+        const valA = a[sortConfig.key] || ''; 
+        const valB = b[sortConfig.key] || '';
+
+        if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
         return 0;
       });
     }
@@ -59,7 +66,7 @@ function VerPacientes() {
     setFiltro(tipo);
     if (tipo === 'A-Z') requestSort('nombreCompleto');
     else if (tipo === 'ID') requestSort('id');
-    else if (tipo === 'Todos') requestSort('id'); 
+    else if (tipo === 'Todos') setSortConfig({ key: 'id', direction: 'ascending' }); // 🔹 CAMBIO: 'Todos' resetea a ID ascendente
   };
 
   if (isLoading) {
@@ -90,12 +97,19 @@ function VerPacientes() {
         >
           Todos
         </button>
+        
         <button
           className={`filter-btn ${filtro === 'A-Z' ? 'active' : ''}`}
           onClick={() => handleFiltroClick('A-Z')}
+          style={{ display: 'flex', alignItems: 'center', gap: '5px' }} 
         >
           A-Z
+          {sortConfig.key === 'nombreCompleto' ? 
+            (sortConfig.direction === 'ascending' ? <IconoArrowUp /> : <IconoArrowDown />) : 
+            (<><IconoArrowUp /><IconoArrowDown /></>)
+          }
         </button>
+
         <button
           className={`filter-btn ${filtro === 'Fecha' ? 'active' : ''}`}
           onClick={() => handleFiltroClick('Fecha')}
@@ -128,8 +142,7 @@ function VerPacientes() {
           <tbody>
             {sortedPacientes.length > 0 ? (
               sortedPacientes.map(paciente => {
-                // 🔹 Asegurar que se muestre el nombre correcto sin importar el campo
-                const nombre = paciente.nombreCompleto || paciente.nombre || paciente.nombrePaciente || 'Sin nombre';
+                const nombre = paciente.nombreCompleto;
                 return (
                   <tr key={paciente.id}>
                     <td>{paciente.id}</td>

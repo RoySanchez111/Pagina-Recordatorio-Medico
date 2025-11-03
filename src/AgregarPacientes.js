@@ -21,6 +21,11 @@ function AgregarPacientes() {
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        if (!formData.sexo) {
+            alert('Por favor, seleccione el sexo del paciente.');
+            return;
+        }
+
         const usuariosActuales = JSON.parse(localStorage.getItem('usuarios')) || usuariosData;
 
         const nuevoPaciente = {
@@ -51,7 +56,6 @@ function AgregarPacientes() {
 
     return (
         <div className="form-usuario-container">
-            {/* --- TÍTULO (Estilo Admin) --- */}
             <h2 className="page-title">
                 <img src={agregarAzul} alt="Agregar Paciente" />
                 Agregar pacientes
@@ -67,18 +71,22 @@ function AgregarPacientes() {
                             value={formData.nombreCompleto}
                             onChange={handleChange}
                             placeholder="Ej. Leonel Salvador Lugo Escobar"
+                            required
                         />
                     </div>
 
                     <div className="form-group">
                         <label>Sexo</label>
-                        <input
-                            type="text"
+                        <select
                             name="sexo"
                             value={formData.sexo}
                             onChange={handleChange}
-                            placeholder="Masculino"
-                        />
+                            required
+                        >
+                            <option value="" disabled>Seleccione una opción</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Femenino">Femenino</option>
+                        </select>
                     </div>
 
                     <div className="form-group">
@@ -103,7 +111,7 @@ function AgregarPacientes() {
                         />
                     </div>
 
-                    <div className="form-group">
+                    <div className="form-group full-width">
                         <label>Fecha de Nacimiento</label>
                         <input
                             type="date"

@@ -1,105 +1,126 @@
-import React, { useState } from 'react';
-import './App.css'; // Reusa el CSS
+import React, { useState, useEffect } from 'react';
+import './App.css'; 
 
-// Props: isOpen, onClose (para cerrar), onAdd (para agregar)
-function ModalMedicamento({ isOpen, onClose, onAdd }) {
-    const [medicamento, setMedicamento] = useState('');
-    const [dosis, setDosis] = useState('');
-    const [frecuencia, setFrecuencia] = useState('');
-    const [duracion, setDuracion] = useState('');
-    const [instrucciones, setInstrucciones] = useState('');
+function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
+  
+  const [formData, setFormData] = useState({
+    nombre: '',
+    dosis: '',
+    frecuencia: '',
+    duracion: '',
+    instrucciones: ''
+  });
 
-    if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen && medicamentoInicial) {
+      setFormData(medicamentoInicial);
+    } else if (isOpen && !medicamentoInicial) {
+      setFormData({
+        nombre: '',
+        dosis: '',
+        frecuencia: '',
+        duracion: '',
+        instrucciones: ''
+      });
+    }
+  }, [isOpen, medicamentoInicial]);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const nuevoMedicamento = {
-            nombre: medicamento,
-            dosis,
-            frecuencia,
-            duracion,
-            instrucciones
-        };
-        onAdd(nuevoMedicamento); // Envía el objeto al padre
-        
-        // Limpiar y cerrar
-        setMedicamento('');
-        setDosis('');
-        setFrecuencia('');
-        setDuracion('');
-        setInstrucciones('');
-        onClose();
-    };
-    
-    // e.stopPropagation() evita que el clic en el modal cierre el modal
-    return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-                
-                <div className="modal-header">
-                    <h3>AGREGAR MEDICAMENTO</h3>
-                </div>
-                
-                <form className="modal-body" onSubmit={handleSubmit}>
-                    
-                    <div className="form-group">
-                        <label>Nombre del Medicamento</label>
-                        <input 
-                            type="text" 
-                            value={medicamento}
-                            onChange={(e) => setMedicamento(e.target.value)}
-                            placeholder="Amoxicilina"
-                        />
-                    </div>
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-                    <div className="form-grid"> {/* Reusa .form-grid */}
-                        <div className="form-group">
-                            <label>Dosis</label>
-                            <input 
-                                type="text" 
-                                value={dosis}
-                                onChange={(e) => setDosis(e.target.value)}
-                                placeholder="1 cápsula"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Frecuencia</label>
-                            <input 
-                                type="text" 
-                                value={frecuencia}
-                                onChange={(e) => setFrecuencia(e.target.value)}
-                                placeholder="Cada 8 horas"
-                            />
-                        </div>
-                    </div>
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+  };
 
-                    <div className="form-group">
-                        <label>Duración del Tratamiento</label>
-                        <input 
-                            type="text" 
-                            value={duracion}
-                            onChange={(e) => setDuracion(e.target.value)}
-                            placeholder="7 dias"
-                        />
-                    </div>
-                    
-                    <div className="form-group">
-                        <label>Instrucciones Especiales</label>
-                        <textarea 
-                            value={instrucciones}
-                            onChange={(e) => setInstrucciones(e.target.value)}
-                            rows="4"
-                        ></textarea>
-                    </div>
-                    
-                    <div className="form-actions">
-                        <button type="button" className="btn btn-secondary" onClick={onClose}>Cancelar</button>
-                        <button type="submit" className="btn btn-primary">Agregar</button>
-                    </div>
-                </form>
-            </div>
+  if (!isOpen) {
+    return null;
+  }
+
+  const esModoEdicion = medicamentoInicial !== null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h3>{esModoEdicion ? 'Editar Medicamento' : 'Agregar Medicamento'}</h3>
         </div>
-    );
+        
+        <form onSubmit={handleSubmit} className="modal-body">
+          
+          <div className="form-group">
+            <label>Nombre del Medicamento</label>
+            <input
+              type="text"
+              name="nombre"
+              value={formData.nombre}
+              onChange={handleChange}
+              placeholder="Ej. Paracetamol 500mg"
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Dosis</label>
+            <input
+              type="text"
+              name="dosis"
+              value={formData.dosis}
+              onChange={handleChange}
+              placeholder="Ej. 1 cápsula"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Frecuencia</label>
+            <input
+              type="text"
+              name="frecuencia"
+              value={formData.frecuencia}
+              onChange={handleChange}
+              placeholder="Ej. cada 8 horas"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Duración del Tratamiento</label>
+            <input
+              type="text"
+              name="duracion"
+              value={formData.duracion}
+              onChange={handleChange}
+              placeholder="Ej. 7 días"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Instrucciones Adicionales (Opcional)</label>
+            <textarea
+              name="instrucciones"
+              value={formData.instrucciones}
+              onChange={handleChange}
+              rows="3"
+              placeholder="Ej. Tomar después de los alimentos"
+            ></textarea>
+          </div>
+
+          <div className="form-actions">
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
+              Cancelar
+            </button>
+            <button type="submit" className="btn btn-primary">
+              {esModoEdicion ? 'Guardar Cambios' : 'Agregar'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 export default ModalMedicamento;

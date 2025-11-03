@@ -4,7 +4,6 @@ import ModalMedicamento from './AgregarMedicamento';
 import usuariosData from './usuarios.json';
 import editarAzul from './assets/editar-azul.png'; 
 
-// --- Función para obtener la fecha de hoy ---
 const getTodayDate = () => {
   const today = new Date();
   const yyyy = today.getFullYear();
@@ -15,20 +14,13 @@ const getTodayDate = () => {
 
 function AgregarReceta() {
   const [pacientes, setPacientes] = useState([]);
-  const [medicamentos, setMedicamentos] = useState([
-    {
-      nombre: "Paracetamol 500mg",
-      dosis: "1 cápsula",
-      frecuencia: "cada 8 horas",
-      duracion: "7 días",
-      instrucciones: ""
-    }
-  ]);
+  const [medicamentos, setMedicamentos] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPaciente, setSelectedPaciente] = useState("");
   const [fecha, setFecha] = useState(getTodayDate());
   const [diagnostico, setDiagnostico] = useState("");
   const [observaciones, setObservaciones] = useState("");
+  const [medicamentoAEditar, setMedicamentoAEditar] = useState(null);
 
   useEffect(() => {
     const guardados = JSON.parse(localStorage.getItem('usuarios')) || usuariosData;
@@ -36,8 +28,18 @@ function AgregarReceta() {
     setPacientes(pacientesFiltrados);
   }, []);
 
-  const handleAddMedicamento = (nuevo) => {
-    setMedicamentos(prev => [...prev, nuevo]);
+  const handleSaveMedicamento = (medicamentoGuardado) => {
+    if (medicamentoAEditar !== null) {
+      const indexAActualizar = medicamentoAEditar.index;
+      setMedicamentos(prev => 
+        prev.map((med, i) => 
+          i === indexAActualizar ? medicamentoGuardado : med
+        )
+      );
+    } else {
+      setMedicamentos(prev => [...prev, medicamentoGuardado]);
+    }
+    handleCloseModal();
   };
 
   const handleRemoveMedicamento = (index) => {
@@ -46,9 +48,64 @@ function AgregarReceta() {
     }
   };
 
+  const handleOpenModalAgregar = () => {
+    setMedicamentoAEditar(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenModalEditar = (index) => {
+    setMedicamentoAEditar({
+      index: index,
+      data: medicamentos[index]
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setMedicamentoAEditar(null);
+  };
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    alert('Receta guardada (simulación)');
+
+    if (!selectedPaciente) {
+      alert('Error: Debe seleccionar un paciente.');
+      return;
+    }
+    if (medicamentos.length === 0) {
+      alert('Error: Debe agregar al menos un medicamento a la receta.');
+      return;
+    }
+    if (!diagnostico) {
+      alert('Error: Debe ingresar un diagnóstico.');
+      return;
+    }
+
+    const pacienteInfo = pacientes.find(p => p.id === parseInt(selectedPaciente));
+    const nombrePaciente = pacienteInfo ? pacienteInfo.nombreCompleto : 'ID ' + selectedPaciente;
+
+    const nuevaReceta = {
+      id: new Date().getTime(),
+      pacienteId: parseInt(selectedPaciente),
+      pacienteNombre: nombrePaciente,
+      fecha: fecha,
+      diagnostico: diagnostico,
+      observaciones: observaciones,
+      medicamentos: medicamentos
+    };
+
+    const recetasActuales = JSON.parse(localStorage.getItem('recetasGuardadas')) || [];
+    const recetasActualizadas = [...recetasActuales, nuevaReceta];
+    localStorage.setItem('recetasGuardadas', JSON.stringify(recetasActualizadas));
+
+    alert(`✅ Receta asignada con éxito a ${nombrePaciente}.`);
+
+    setMedicamentos([]);
+    setSelectedPaciente("");
+    setFecha(getTodayDate());
+    setDiagnostico("");
+    setObservaciones("");
   };
 
   return (
@@ -66,6 +123,7 @@ function AgregarReceta() {
               className="rol-input" 
               value={selectedPaciente}
               onChange={(e) => setSelectedPaciente(e.target.value)}
+              required
             >
               <option value="" disabled>Selecciona un paciente</option>
               {pacientes.map(p => (
@@ -82,6 +140,7 @@ function AgregarReceta() {
               type="date" 
               value={fecha}
               onChange={(e) => setFecha(e.target.value)}
+              required
             />
           </div>
           
@@ -92,6 +151,7 @@ function AgregarReceta() {
               value={diagnostico}
               onChange={(e) => setDiagnostico(e.target.value)}
               placeholder="Infección respiratoria superior"
+              required
             />
           </div>
           
@@ -117,14 +177,14 @@ function AgregarReceta() {
                   <div className="medicamento-actions">
                     <button 
                       type="button" 
-                      className="btn-secundario" 
-                      onClick={() => alert('Editar medicamento (no implementado)')}
+                      className="btn-secundario"
+                      onClick={() => handleOpenModalEditar(index)} 
                     >
                       Editar
                     </button>
                     <button 
                       type="button" 
-                      className="btn-eliminar" 
+                      className="btn-eliminar"
                       onClick={() => handleRemoveMedicamento(index)}
                     >
                       Eliminar
@@ -141,17 +201,28 @@ function AgregarReceta() {
             type="button" 
             className="btn"
             style={{width: '100%', backgroundColor: '#e4e9ff', color: '#4a6fff', fontWeight: 'bold'}}
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenModalAgregar}
           >
             + Agregar Medicamento
           </button>
+
+          <div className="form-actions" style={{marginTop: '30px'}}>
+            <button 
+              type="submit" 
+              className="btn btn-primary"
+            >
+              Asignar Receta al Paciente
+            </button>
+          </div>
+
         </form>
       </div>
 
       <ModalMedicamento 
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onAdd={handleAddMedicamento}
+        onClose={handleCloseModal}
+        onSave={handleSaveMedicamento}
+        medicamentoInicial={medicamentoAEditar ? medicamentoAEditar.data : null}
       />
     </div>
   );

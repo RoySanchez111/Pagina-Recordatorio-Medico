@@ -1,8 +1,14 @@
-/* =========================================
-    1. ESTILOS GLOBALES Y LOGIN
-   ========================================= */
+/* 1. ESTILOS GLOBALES Y LOGIN
+----------------------------------- */
 
-/* --- Página de Login --- */
+.login-aside,
+.logo-container,
+.login-form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .login-container {
     display: flex;
     width: 100%;
@@ -12,9 +18,6 @@
 .login-aside {
     flex-basis: 45%;
     background-color: #6a8dff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 .logo-container {
@@ -22,9 +25,6 @@
     height: 200px;
     background-color: #ffffff;
     border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     font-size: 1.8rem;
     font-weight: bold;
     color: #555;
@@ -33,9 +33,6 @@
 .login-form-container {
     flex-basis: 55%;
     background-color: #f4f7fc;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 .login-form {
@@ -67,91 +64,72 @@
     background-color: #587efc;
 }
 
-/* Campos de formulario (usado en Login y Formularios de dashboard) */
-.form-group {
-    margin-bottom: 20px;
-}
 
-.form-group label {
-    display: block;
-    font-weight: bold;
-    color: #555;
-    margin-bottom: 8px;
-}
-
-/* Input genérico, (Login usa uno más simple) */
-.form-group input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 1rem;
-    box-sizing: border-box; /* Añadido para consistencia */
-}
-
-/* =========================================
-    2. LAYOUT DEL DASHBOARD
-   (CONTENEDOR, HEADER, CONTENT)
-   ========================================= */
+/* 2. LAYOUT DEL DASHBOARD
+----------------------------------- */
 
 .dashboard-container {
     display: flex;
     width: 100%;
     min-height: 100vh;
-    background-color: #f4f7fc; /* Color de fondo general */
+    background-color: #f4f7fc;
 }
 
 .main-content {
-    flex-grow: 1; /* Ocupa el resto del espacio */
-    margin-left: 250px; /* Ancho por defecto del sidebar */
+    flex-grow: 1;
+    margin-left: 250px;
     transition: margin-left 0.3s ease;
     display: flex;
     flex-direction: column;
 }
 
 .main-content.collapsed {
-    margin-left: 80px; /* Ancho del sidebar colapsado */
+    margin-left: 80px;
 }
 
 .main-header {
     width: 100%;
     padding: 20px 30px;
     display: flex;
-    justify-content: flex-end; /* Alinea info de admin a la derecha */
+    justify-content: flex-end;
     align-items: center;
     background-color: #f4f7fc;
     box-sizing: border-box;
-    min-height: 90px; /* Coincide con altura del logo */
-}
-
-.admin-info {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    font-size: 1.1rem; /* Petición 2: Texto más grande */
-}
-
-.admin-info span:first-child {
-    font-weight: bold;
-    font-size: 1.25rem; /* Petición 2: Texto más grande */
+    min-height: 90px;
 }
 
 .page-content {
-    /* Contenido de página más arriba */
     padding: 0 30px 20px 30px; 
-    flex-grow: 1; /* Ocupa el espacio restante */
+    flex-grow: 1;
 }
 
-/* =========================================
-    3. SIDEBAR (MENÚ LATERAL)
-   ========================================= */
+.doctor-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding-right: 20px;
+}
 
-/* --- 3a. Sidebar General y Logo --- */
+.doctor-name {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #333;
+}
+
+.doctor-title {
+    font-size: 0.9em;
+    color: #777;
+    margin-top: -2px;
+}
+
+
+/* 3. SIDEBAR (MENÚ LATERAL)
+----------------------------------- */
 
 .sidebar {
-    width: 250px; /* Ancho normal */
+    width: 250px;
     height: 100vh;
-    position: fixed; /* Fijo en la pantalla */
+    position: fixed;
     top: 0;
     left: 0;
     background-color: #ffffff;
@@ -159,104 +137,80 @@
     display: flex;
     flex-direction: column;
     transition: width 0.3s ease;
-    overflow-x: hidden; /* Oculta texto al colapsar */
+    overflow-x: hidden;
 }
 
 .sidebar.collapsed {
-    width: 80px; /* Ancho colapsado */
+    width: 80px;
 }
 
 .logo-section {
     display: flex;
     align-items: center;
     padding: 20px;
-    height: 90px; /* Petición 5: Más alto */
+    height: 90px;
     box-sizing: border-box;
-    background-color: #6a8dff; /* Fondo azul del logo */
+    background-color: #6a8dff;
     color: white;
 }
 
 .logo {
-    display: none; /* Oculta el .svg, usa el texto */
+    display: none;
 }
 
 .logo-text {
     font-weight: bold;
-    font-size: 1.4rem; /* Petición 5: Más grande */
+    font-size: 1.4rem;
     padding: 12px 4px;
     border: 2px solid white;
     border-radius: 8px;
-    white-space: nowrap; /* Evita que el texto se rompa */
+    white-space: nowrap;
 }
-
-.sidebar.collapsed .logo-text {
-    display: none; /* Oculta el texto cuando está colapsado */
-}
-
-/* --- 3b. Items de Navegación (Enlaces) --- */
 
 .nav-menu {
-    flex-grow: 1; /* Ocupa el espacio del medio */
+    flex-grow: 1;
     padding-top: 20px;
 }
 
 .nav-item {
     display: flex;
     align-items: center;
-    padding: 18px 30px; /* Petición 4: Más padding */
+    padding: 18px 30px;
     margin: 8px 10px;
     text-decoration: none;
     color: #555;
     font-weight: 500;
     border-radius: 8px;
     transition: transform 0.2s ease, background-color 0.2s ease;
-    white-space: nowrap; /* Evita que el texto se rompa */
+    white-space: nowrap;
 }
 
 .nav-text {
-    font-size: 1.1rem; /* Petición 4: Texto más grande */
+    font-size: 1.1rem;
 }
 
 .nav-item img {
     width: 28px;
     height: 28px;
-    margin-right: 8px; /* 🔹 antes 25px */
+    margin-right: 8px;
     transition: margin 0.3s ease;
 }
 
-
 .nav-item:hover {
-    transform: scale(1.03); /* Se hace un poquito más grande */
+    transform: scale(1.03);
     background-color: #f0f0f0;
 }
 
-/* --- Estilo Activo --- */
 .nav-item.active {
-    background-color: #e4e9ff; /* Recuadro azul claro */
-    color: #4a6fff; /* Texto azul */
+    background-color: #e4e9ff;
+    color: #4a6fff;
     font-weight: bold;
 }
 
 .nav-item.active:hover {
-    transform: scale(1); /* Quita el hover si está activo */
+    transform: scale(1);
     background-color: #e4e9ff;
 }
-
-/* --- Estados Colapsados (Navegación) --- */
-.sidebar.collapsed .nav-item {
-    justify-content: center;
-    padding: 18px 10px;
-}
-
-.sidebar.collapsed .nav-item img {
-    margin-right: 0;
-}
-
-.sidebar.collapsed .nav-text {
-    display: none; /* Oculta el texto al colapsar */
-}
-
-/* --- 3c. Footer del Sidebar (Botones Salir/Colapsar) --- */
 
 .sidebar-footer {
     padding: 10px;
@@ -270,57 +224,67 @@
 .toggle-btn {
     display: flex;
     align-items: center;
-    justify-content: flex-end; /* Alinea la flecha a la derecha */
+    justify-content: flex-end;
     padding: 10px 15px;
     cursor: pointer;
 }
 
 .toggle-btn img {
-    width: 28px; /* Flecha más grande */
+    width: 28px;
     height: 28px;
     transition: transform 0.3s ease;
 }
 
 .toggle-btn img.flipped {
-    transform: rotate(180deg); /* Gira la flecha al colapsar */
+    transform: rotate(180deg);
 }
 
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .nav-text {
+    display: none;
+}
+
+.sidebar.collapsed .nav-item,
 .sidebar.collapsed .toggle-btn {
     justify-content: center;
 }
 
+.sidebar.collapsed .nav-item {
+    padding: 18px 10px;
+}
 
-/* =========================================
-    4. ESTILOS DE PÁGINAS 
-   (TÍTULOS, TABLAS, FORMULARIOS)
-   ========================================= */
+.sidebar.collapsed .nav-item img {
+    margin-right: 0;
+}
 
-/* --- 4a. Título de Página genérico --- */
+
+/* 4. ESTILOS DE PÁGINAS
+----------------------------------- */
+
 .page-title {
     display: flex;
     align-items: center;
-    font-size: 2rem; /* Más grande */
-    color: #4a6fff; /* Petición 3: Título en azul */
+    font-size: 2rem;
+    color: #4a6fff;
     font-weight: bold;
     margin-bottom: 25px;
     border-bottom: 2px solid #ddd;
     padding-bottom: 15px;
-    /* (Padding-top eliminado para que suba el contenido) */
 }
 
 .page-title img {
-    width: 32px; /* Más grande */
+    width: 32px;
     height: 32px;
     margin-right: 12px;
 }
 
-/* --- 4b. Página Usuarios (Filtros, Tabla) --- */
 .filter-buttons {
     margin-bottom: 20px;
-    display: flex; /* <-- AÑADE ESTO */
-    align-items: center; /* <-- AÑADE ESTO */
-    gap: 10px; /* <-- AÑADE ESTO (o manten 'margin-right' en .filter-btn) */
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
+
 .filter-btn {
     padding: 10px 20px;
     margin-right: 10px;
@@ -348,7 +312,7 @@
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    overflow: hidden; /* Para los bordes redondeados */
+    overflow: hidden;
 }
 
 table {
@@ -377,16 +341,40 @@ tbody tr:last-child td {
 
 tbody tr td {
     color: #555;
-    height: 50px; /* Altura fija para filas vacías */
+    height: 50px;
 }
 
 tbody tr:hover {
     background-color: #f9f9f9;
 }
 
-/* --- 4c. Páginas de Formulario (Agregar/Editar) --- */
+
+/* 5. FORMULARIOS (GLOBAL)
+----------------------------------- */
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
 .form-usuario-container {
-    max-width: 900px; /* Ancho máximo del formulario */
+    max-width: 900px;
     margin: 0 auto;
     height: 100%;
     overflow-y: auto; 
@@ -399,7 +387,6 @@ tbody tr:hover {
     padding: 30px 40px;
 }
 
-/* --- Avatar --- */
 .avatar-section {
     display: flex;
     justify-content: center;
@@ -413,13 +400,13 @@ tbody tr:hover {
     height: 120px;
     border-radius: 50%;
     border: 3px solid #eee;
-    object-fit: cover; /* Para que la imagen se vea bien */
+    object-fit: cover;
 }
 
 .edit-avatar-btn {
     position: absolute;
     bottom: 0;
-    right: calc(50% - 60px); /* Centrado */
+    right: calc(50% - 60px);
     transform: translateX(35px);
     background-color: #6a8dff;
     color: white;
@@ -432,25 +419,31 @@ tbody tr:hover {
     border: 2px solid white;
 }
 
-/* --- Grid de Campos --- */
 .form-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Dos columnas */
-    gap: 20px 30px; /* Espacio vertical y horizontal */
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 30px;
 }
 
 .form-group.full-width {
-    grid-column: 1 / -1; /* Ocupa todo el ancho */
+    grid-column: 1 / -1;
 }
 
-/* Estilos de Inputs específicos para formularios del Dashboard */
-.form-group input {
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
     padding: 12px 15px;
+    border: 1px solid #ddd;
     border-radius: 6px;
+    font-size: 1rem;
     color: #333;
+    box-sizing: border-box;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
     outline: none;
     border-color: #6a8dff;
     box-shadow: 0 0 0 2px #e4e9ff;
@@ -462,42 +455,23 @@ tbody tr:hover {
     border-color: #e0e0e0;
 }
 
-/* --- 4d. Botones genéricos (Formularios) --- */
-.form-actions {
-    margin-top: 30px;
-    display: flex;
-    justify-content: flex-end; /* Botones a la derecha */
-    gap: 15px;
+.form-group select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #fff; 
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23555'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd' /%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 1.2em;
 }
 
-.btn {
-    padding: 12px 25px;
-    font-size: 1rem;
-    font-weight: 600;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+.form-group textarea {
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
 }
 
-.btn-primary {
-    background-color: #6a8dff;
-    color: white;
-}
-.btn-primary:hover {
-    background-color: #587efc;
-}
-
-.btn-danger {
-    background-color: #d90429;
-    color: white;
-}
-.btn-danger:hover {
-    background-color: #b30021;
-}
-
-
-/* --- Tarjeta del campo ¿Qué es? --- */
 .rol-card {
     background-color: #fff;
     border-radius: 10px;
@@ -537,11 +511,213 @@ tbody tr:hover {
     outline: none;
 }
 
-/* =========================================
-    5. ESTILOS DE ACCESIBILIDAD 
-   ========================================= */
 
-/* Botón de accesibilidad */
+/* 6. BOTONES Y COMPONENTES
+----------------------------------- */
+
+.form-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.btn {
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary,
+.btn-danger,
+.btn-success {
+    color: white;
+}
+
+.btn-primary {
+    background-color: #6a8dff;
+}
+.btn-primary:hover {
+    background-color: #587efc;
+}
+
+.btn-danger {
+    background-color: #d90429;
+}
+.btn-danger:hover {
+    background-color: #b30021;
+}
+
+.btn-success {
+    background-color: #28a745;
+}
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.btn-secondary {
+    background-color: #f0f0f0;
+    color: #555;
+    border: 1px solid #ddd;
+}
+.btn-secondary:hover {
+    background-color: #e0e0e0;
+}
+
+.lista-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.item-card {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+}
+
+.item-card h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.item-card p {
+    margin: 4px 0;
+    color: #555;
+    font-size: 0.95rem;
+}
+
+.item-card-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: white;
+}
+
+.status-pendiente {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.status-aceptada,
+.status-reprogramada {
+    color: white;
+}
+
+.status-aceptada {
+    background-color: #28a745;
+}
+
+.status-reprogramada {
+    background-color: #dc3545;
+}
+
+.medicamentos-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 5px;
+}
+
+.medicamento-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 12px 15px;
+}
+
+.medicamento-info p {
+    margin: 4px 0 0 0;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.medicamento-actions {
+    display: flex;
+    gap: 15px;
+    font-size: 1.1rem;
+}
+
+
+/* 7. MODAL Y OVERLAYS
+----------------------------------- */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 100%;
+    max-width: 500px;
+    overflow: hidden;
+}
+
+.modal-header {
+    background-color: #6a8dff;
+    color: white;
+    padding: 20px 25px;
+    text-align: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.modal-body {
+    padding: 25px 30px;
+}
+
+.modal-body .form-actions {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+
+/* 8. ACCESIBILIDAD
+----------------------------------- */
+
 .btn-accessibility {
     position: fixed;
     top: 20px;
@@ -556,7 +732,6 @@ tbody tr:hover {
     font-size: 16px;
 }
 
-/* Panel de accesibilidad */
 #accessibility-panel {
     position: fixed;
     top: 70px;
@@ -590,7 +765,6 @@ tbody tr:hover {
     background: #2980b9;
 }
 
-/* Estilos para texto grande */
 .large-text {
     font-size: 1.2em !important;
 }
@@ -599,7 +773,6 @@ tbody tr:hover {
     font-size: 1.4em !important;
 }
 
-/* Estilos para alto contraste */
 .high-contrast {
     background: black !important;
     color: white !important;
@@ -624,7 +797,6 @@ tbody tr:hover {
     color: yellow !important;
 }
 
-/* Texto para lectores de pantalla */
 .screen-reader-text {
     position: absolute;
     left: -10000px;
@@ -632,189 +804,4 @@ tbody tr:hover {
     width: 1px;
     height: 1px;
     overflow: hidden;
-}
-
-/* --- Lista de Consultas y Recetas --- */
-.lista-items-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.item-card {
-    background-color: #fff;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    border: 1px solid #eee;
-}
-
-.item-card h4 {
-    margin: 0 0 10px 0;
-    color: #333;
-}
-
-.item-card p {
-    margin: 4px 0;
-    color: #555;
-    font-size: 0.95rem;
-}
-
-.item-card-actions {
-    margin-top: 15px;
-    display: flex;
-    gap: 10px;
-}
-
-/* --- Botones para Aceptar/Reprogramar --- */
-.btn-success {
-    background-color: #28a745;
-    color: white;
-}
-.btn-success:hover {
-    background-color: #218838;
-}
-
-.btn-warning {
-    background-color: #ffc107;
-    color: #212529;
-}
-.btn-warning:hover {
-    background-color: #e0a800;
-}
-
-
-/* --- Badges de Estado --- */
-.status-badge {
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: white;
-}
-
-.status-pendiente {
-    background-color: #ffc107; /* Amarillo */
-    color: #333;
-}
-
-.status-aceptada {
-    background-color: #28a745; /* Verde */
-}
-
-.status-reprogramada {
-    background-color: #dc3545; /* Rojo */
-}
-/* =========================================
-    6. ESTILOS PARA DOCTOR (RECETA Y MODAL)
-   ========================================= */
-
-/* --- Lista de Medicamentos (AgregarReceta.js) --- */
-.medicamentos-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-    max-height: 200px; /* Altura máxima antes de scroll */
-    overflow-y: auto;
-    padding: 5px;
-}
-
-.medicamento-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #f9f9f9;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    padding: 12px 15px;
-}
-
-.medicamento-info p {
-    margin: 4px 0 0 0;
-    font-size: 0.9rem;
-    color: #555;
-}
-
-.medicamento-actions {
-    display: flex;
-    gap: 15px;
-    font-size: 1.1rem;
-}
-
-/* --- Modal (AgregarMedicamento.js) --- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro semitransparente */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    width: 100%;
-    max-width: 500px;
-    overflow: hidden; /* Para que el header se vea bien */
-}
-
-.modal-header {
-    background-color: #6a8dff; /* Azul como el sidebar */
-    color: white;
-    padding: 20px 25px;
-    text-align: center;
-}
-
-.modal-header h3 {
-    margin: 0;
-    font-size: 1.4rem;
-}
-
-.modal-body {
-    padding: 25px 30px;
-}
-
-/* Reusar .form-actions dentro del modal */
-.modal-body .form-actions {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-}
-
-/* Botón secundario (Cancelar) */
-.btn-secondary {
-    background-color: #f0f0f0;
-    color: #555;
-    border: 1px solid #ddd;
-}
-.btn-secondary:hover {
-    background-color: #e0e0e0;
-}
-
-/* Estilo genérico para <textarea> */
-.form-group textarea {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 1rem;
-    color: #333;
-    font-family: inherit; /* Heredar la fuente */
-    resize: vertical; /* Permitir redimensionar verticalmente */
-    box-sizing: border-box; /* Importante */
-    min-height: 80px;
-}
-
-.form-group textarea:focus {
-    outline: none;
-    border-color: #6a8dff;
-    box-shadow: 0 0 0 2px #e4e9ff;
 }
