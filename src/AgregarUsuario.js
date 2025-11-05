@@ -13,6 +13,21 @@ function AgregarUsuario() {
         JSON.parse(localStorage.getItem('usuarios')) || usuariosData
     );
 
+    // --- Generador de contraseñas de 6 dígitos ---
+    const generarPassword = () => {
+        const password = Math.floor(100000 + Math.random() * 900000);
+        return password.toString();
+    };
+
+    // --- Generar y establecer contraseña automáticamente ---
+    const generarYEstablecerPassword = () => {
+        const nuevaPassword = generarPassword();
+        setFormData({ 
+            ...formData, 
+            contraseña: nuevaPassword 
+        });
+    };
+
     // --- Manejar cambio en campos de texto ---
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -47,11 +62,24 @@ function AgregarUsuario() {
         const valor = e.target.value;
         setRol(valor);
         setMostrarCampos(!!valor);
+        
+        // Generar contraseña automáticamente cuando se selecciona un rol
+        if (valor) {
+            setTimeout(() => {
+                generarYEstablecerPassword();
+            }, 100);
+        }
     };
 
     // --- Guardar el nuevo usuario ---
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // Validar que todos los campos requeridos estén llenos
+        if (!formData.nombreCompleto || !formData.correo || !formData.contraseña) {
+            alert('Por favor, completa todos los campos requeridos');
+            return;
+        }
 
         const nuevo = {
             id: usuarios.length + 1,
@@ -64,7 +92,7 @@ function AgregarUsuario() {
         setUsuarios(actualizados);
         localStorage.setItem('usuarios', JSON.stringify(actualizados));
 
-        alert('✅ Usuario agregado con éxito');
+        alert(`✅ Usuario agregado con éxito\nContraseña generada: ${formData.contraseña}\n\n¡No olvides compartir esta contraseña con el usuario!`);
         setFormData({});
         setRol('');
         setMostrarCampos(false);
@@ -102,12 +130,23 @@ function AgregarUsuario() {
                         {rol === 'doctor' && (
                             <>
                                 <div className="form-group full-width">
-                                    <label>Nombre completo</label>
-                                    <input name="nombreCompleto" onChange={handleChange} />
+                                    <label>Nombre completo *</label>
+                                    <input 
+                                        name="nombreCompleto" 
+                                        value={formData.nombreCompleto || ''}
+                                        onChange={handleChange} 
+                                        required
+                                    />
                                 </div>
                                 <div className="form-group full-width">
-                                    <label>Correo</label>
-                                    <input type="email" name="correo" onChange={handleChange} />
+                                    <label>Correo *</label>
+                                    <input 
+                                        type="email" 
+                                        name="correo" 
+                                        value={formData.correo || ''}
+                                        onChange={handleChange} 
+                                        required
+                                    />
                                 </div>
 
                                 {/* Campo modificado: subir PDF de la cédula */}
@@ -126,19 +165,66 @@ function AgregarUsuario() {
 
                                 <div className="form-group">
                                     <label>Especialidad</label>
-                                    <input name="especialidad" onChange={handleChange} />
+                                    <input 
+                                        name="especialidad" 
+                                        value={formData.especialidad || ''}
+                                        onChange={handleChange} 
+                                    />
                                 </div>
                                 <div className="form-group">
                                     <label>Teléfono de consultorio</label>
-                                    <input name="telefono" onChange={handleChange} />
+                                    <input 
+                                        name="telefono" 
+                                        value={formData.telefono || ''}
+                                        onChange={handleChange} 
+                                    />
                                 </div>
+                                
+                                {/* Campo de contraseña con generador */}
                                 <div className="form-group full">
-                                    <label>Contraseña</label>
-                                    <input type="password" name="contraseña" onChange={handleChange} />
+                                    <label>Contraseña *</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <input 
+                                            type="text" 
+                                            name="contraseña" 
+                                            value={formData.contraseña || ''}
+                                            onChange={handleChange}
+                                            placeholder="Se generará automáticamente"
+                                            readOnly
+                                            style={{ 
+                                                flex: 1,
+                                                backgroundColor: '#f5f5f5',
+                                                border: '1px solid #ddd'
+                                            }}
+                                        />
+                                        <button 
+                                            type="button" 
+                                            onClick={generarYEstablecerPassword}
+                                            style={{
+                                                padding: '8px 12px',
+                                                backgroundColor: '#007bff',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                fontSize: '12px'
+                                            }}
+                                        >
+                                            Generar
+                                        </button>
+                                    </div>
+                                    <small style={{ color: '#666', fontSize: '12px' }}>
+                                        Contraseña de 6 dígitos generada automáticamente
+                                    </small>
                                 </div>
+                                
                                 <div className="form-group full-width">
                                     <label>Dirección de consultorio</label>
-                                    <input name="direccion" onChange={handleChange} />
+                                    <input 
+                                        name="direccion" 
+                                        value={formData.direccion || ''}
+                                        onChange={handleChange} 
+                                    />
                                 </div>
                             </>
                         )}
@@ -146,16 +232,61 @@ function AgregarUsuario() {
                         {rol === 'administrador' && (
                             <>
                                 <div className="form-group full-width">
-                                    <label>Correo</label>
-                                    <input type="email" name="correo" onChange={handleChange} />
+                                    <label>Correo *</label>
+                                    <input 
+                                        type="email" 
+                                        name="correo" 
+                                        value={formData.correo || ''}
+                                        onChange={handleChange} 
+                                        required
+                                    />
                                 </div>
                                 <div className="form-group full-width">
-                                    <label>Nombre completo</label>
-                                    <input name="nombreCompleto" onChange={handleChange} />
+                                    <label>Nombre completo *</label>
+                                    <input 
+                                        name="nombreCompleto" 
+                                        value={formData.nombreCompleto || ''}
+                                        onChange={handleChange} 
+                                        required
+                                    />
                                 </div>
+                                
+                                {/* Campo de contraseña con generador */}
                                 <div className="form-group full-width">
-                                    <label>Contraseña</label>
-                                    <input type="password" name="contraseña" onChange={handleChange} />
+                                    <label>Contraseña *</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <input 
+                                            type="text" 
+                                            name="contraseña" 
+                                            value={formData.contraseña || ''}
+                                            onChange={handleChange}
+                                            placeholder="Se generará automáticamente"
+                                            readOnly
+                                            style={{ 
+                                                flex: 1,
+                                                backgroundColor: '#f5f5f5',
+                                                border: '1px solid #ddd'
+                                            }}
+                                        />
+                                        <button 
+                                            type="button" 
+                                            onClick={generarYEstablecerPassword}
+                                            style={{
+                                                padding: '8px 12px',
+                                                backgroundColor: '#007bff',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                fontSize: '12px'
+                                            }}
+                                        >
+                                            Generar
+                                        </button>
+                                    </div>
+                                    <small style={{ color: '#666', fontSize: '12px' }}>
+                                        Contraseña de 6 dígitos generada automáticamente
+                                    </small>
                                 </div>
                             </>
                         )}
@@ -166,7 +297,7 @@ function AgregarUsuario() {
                 {mostrarCampos && (
                     <div className="form-actions">
                         <button type="submit" className="btn btn-primary">
-                            Guardar
+                            Guardar Usuario
                         </button>
                     </div>
                 )}
