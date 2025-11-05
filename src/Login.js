@@ -3,6 +3,12 @@ import './App.css';
 import { useNavigate } from 'react-router-dom';
 import usuariosData from './usuarios.json'; 
 
+// Generador de contraseñas (añadido aquí mismo)
+const generarPassword = () => {
+    const password = Math.floor(100000 + Math.random() * 900000);
+    return password.toString();
+};
+
 function Login() {
     const [claveUnica, setClaveUnica] = useState('');
     const [contrasena, setContrasena] = useState('');
