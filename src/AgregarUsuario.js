@@ -81,6 +81,12 @@ function AgregarUsuario() {
             return;
         }
 
+        // Validación específica para doctores: deben tener cédula profesional subida
+        if (rol === 'doctor' && !formData.cedulaPDF) {
+            alert('Para registrar un doctor, es necesario subir la cédula profesional en formato PDF');
+            return;
+        }
+
         const nuevo = {
             id: usuarios.length + 1,
             rol: rol.charAt(0).toUpperCase() + rol.slice(1),
@@ -151,15 +157,21 @@ function AgregarUsuario() {
 
                                 {/* Campo modificado: subir PDF de la cédula */}
                                 <div className="form-group">
-                                    <label>Cédula profesional (PDF)</label>
+                                    <label>Cédula profesional (PDF) *</label>
                                     <input
                                         type="file"
                                         name="cedula"
                                         accept=".pdf,application/pdf"
                                         onChange={handleFileChange}
+                                        required
                                     />
                                     {formData.cedulaNombre && (
                                         <p className="file-name">Archivo seleccionado: {formData.cedulaNombre}</p>
+                                    )}
+                                    {!formData.cedulaNombre && (
+                                        <p className="file-name" style={{color: '#ff4444'}}>
+                                            * Campo obligatorio para doctores
+                                        </p>
                                     )}
                                 </div>
 
