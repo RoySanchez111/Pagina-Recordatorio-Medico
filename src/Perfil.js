@@ -72,7 +72,8 @@ const Perfil = () => {
 
     return (
         <div style={{ padding: '20px' }}>
-            <h2 style={{ marginBottom: '20px' }}>Perfil</h2>
+            {/* TÍTULO EN AZUL */}
+            <h2 style={{ marginBottom: '20px', color: '#3498db' }}>Perfil</h2>
 
             {/* Tarjeta de información del doctor */}
             <div style={{
@@ -191,7 +192,7 @@ const Perfil = () => {
                 </div>
             </div>
 
-            {/* Modal para cambiar contraseña - MEJOR DISEÑO */}
+            {/* Modal para cambiar contraseña */}
             {showPasswordModal && (
                 <div style={{
                     position: 'fixed',
