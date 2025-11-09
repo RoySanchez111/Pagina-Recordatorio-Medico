@@ -12,6 +12,7 @@ import AgregarPacientes from './AgregarPacientes';
 import AgregarReceta from './AgregarReceta'; 
 import VerRecetas from './VerRecetas';
 import GestionConsultas from './GestionConsultas';
+import Perfil from './Perfil';
 
 const ProtectedRoute = ({ children, rolPermitido }) => {
   const rol = localStorage.getItem('rol');
@@ -59,7 +60,7 @@ function App() {
         <Route path="agregar-receta" element={<AgregarReceta />} />
         <Route path="ver-recetas" element={<VerRecetas />} />
         <Route path="gestionar-consultas" element={<GestionConsultas />} />
-        <Route path="perfil" element={<div>Mi Perfil del Doctor</div>} />
+        <Route path="perfil" element={<Perfil />} />
         <Route index element={<VerPacientes />} />
       </Route>
 
