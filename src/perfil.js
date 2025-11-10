@@ -1,4 +1,3 @@
-// En tu Perfil.js, agrega este botón/link:
 import { Link } from 'react-router-dom';
 
 function Perfil() {
@@ -6,8 +5,8 @@ function Perfil() {
   
   return (
     <div className="perfil-container">
-      {/* ... resto de tu código del perfil ... */}
-      
+      <h2>Mi Perfil</h2>
+
       <div className="password-section">
         <h3>CAMBIAR CONTRASEÑA</h3>
         <Link 
@@ -20,3 +19,5 @@ function Perfil() {
     </div>
   );
 }
+
+export default Perfil; 
