@@ -10,6 +10,8 @@ function AgregarPacientes() {
         telefono: '',
         direccion: '',
         nacimiento: '',
+        tipoSangre: '',
+        alergias: '',
         enfermedadesCronicas: ''
     });
 
@@ -42,6 +44,8 @@ function AgregarPacientes() {
             telefono: formData.telefono,
             direccion: formData.direccion,
             nacimiento: formData.nacimiento,
+            tipoSangre: formData.tipoSangre,
+            alergias: formData.alergias,
             padecimiento: formData.enfermedadesCronicas,
             doctorId: doctorId 
         };
@@ -57,6 +61,8 @@ function AgregarPacientes() {
             telefono: '',
             direccion: '',
             nacimiento: '',
+            tipoSangre: '',
+            alergias: '',
             enfermedadesCronicas: ''
         });
     };
@@ -97,6 +103,25 @@ function AgregarPacientes() {
                     </div>
 
                     <div className="form-group">
+                        <label>Tipo de Sangre</label>
+                        <select
+                            name="tipoSangre"
+                            value={formData.tipoSangre}
+                            onChange={handleChange}
+                        >
+                            <option value="" disabled>Seleccione tipo</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+
+                    <div className="form-group">
                         <label>Número Telefónico</label>
                         <input
                             type="tel"
@@ -129,7 +154,18 @@ function AgregarPacientes() {
                         />
                     </div>
 
-                    <div className="form-group" style={{ gridColumn: '2', gridRow: '2 / span 3' }}>
+                    <div className="form-group full-width">
+                        <label>Alergias</label>
+                        <textarea
+                            name="alergias"
+                            value={formData.alergias}
+                            onChange={handleChange}
+                            rows="3"
+                            placeholder="Ej. Penicilina, Mariscos, Polvo..."
+                        ></textarea>
+                    </div>
+
+                    <div className="form-group" style={{ gridColumn: '2', gridRow: '2 / span 4' }}>
                         <label>Enfermedades Crónicas (Padecimiento)</label>
                         <textarea
                             name="enfermedadesCronicas"
