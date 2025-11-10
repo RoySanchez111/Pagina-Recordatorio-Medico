@@ -4,6 +4,64 @@ import ModalMedicamento from './AgregarMedicamento';
 import usuariosData from './usuarios.json';
 import editarAzul from './assets/editar-azul.png'; 
 
+// Validaciones integradas
+const validarReceta = (recetaData) => {
+  const errores = {};
+
+  // Validar paciente seleccionado
+  if (!recetaData.pacienteId) {
+    errores.pacienteId = 'Debe seleccionar un paciente';
+  }
+
+  // Validar fecha
+  if (!recetaData.fecha) {
+    errores.fecha = 'La fecha de emisión es requerida';
+  } else {
+    const fechaReceta = new Date(recetaData.fecha);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    
+    // No permitir fechas futuras
+    if (fechaReceta > hoy) {
+      errores.fecha = 'La fecha no puede ser futura';
+    }
+    
+    // No permitir fechas muy antiguas (más de 1 año)
+    const minFecha = new Date();
+    minFecha.setFullYear(hoy.getFullYear() - 1);
+    if (fechaReceta < minFecha) {
+      errores.fecha = 'La fecha no puede ser de hace más de 1 año';
+    }
+  }
+
+  // Validar diagnóstico
+  if (!recetaData.diagnostico) {
+    errores.diagnostico = 'El diagnóstico es requerido';
+  } else {
+    const regexDiagnostico = /^[A-Za-zÁáÉéÍíÓóÚúÑñ0-9\s.,-]{5,200}$/;
+    if (!regexDiagnostico.test(recetaData.diagnostico.trim())) {
+      errores.diagnostico = 'El diagnóstico debe contener entre 5 y 200 caracteres válidos';
+    }
+  }
+
+  // Validar observaciones (opcional)
+  if (recetaData.observaciones && recetaData.observaciones.length > 1000) {
+    errores.observaciones = 'Las observaciones no pueden exceder 1000 caracteres';
+  }
+
+  // Validar medicamentos
+  if (!recetaData.medicamentos || recetaData.medicamentos.length === 0) {
+    errores.medicamentos = 'Debe agregar al menos un medicamento';
+  } else if (recetaData.medicamentos.length > 10) {
+    errores.medicamentos = 'Máximo 10 medicamentos permitidos por receta';
+  }
+
+  return {
+    hayErrores: Object.keys(errores).length > 0,
+    errores: errores
+  };
+};
+
 const getTodayDate = () => {
   const today = new Date();
   const yyyy = today.getFullYear();
@@ -22,6 +80,7 @@ function AgregarReceta() {
   const [observaciones, setObservaciones] = useState("");
   const [medicamentoAEditar, setMedicamentoAEditar] = useState(null);
   const [doctorId, setDoctorId] = useState(null);
+  const [errores, setErrores] = useState({});
 
   useEffect(() => {
     const loggedInDoctorId = parseInt(localStorage.getItem('userId'));
@@ -72,19 +131,43 @@ function AgregarReceta() {
     setMedicamentoAEditar(null);
   };
 
+  const handleChange = (field, value) => {
+    // Limpiar errores cuando el usuario escribe
+    if (errores[field]) {
+      setErrores(prev => ({ ...prev, [field]: '' }));
+    }
+
+    let valorLimpio = value;
+    
+    // Validaciones en tiempo real
+    if (field === 'diagnostico') {
+      // Solo letras, números, espacios y caracteres médicos básicos
+      valorLimpio = value.replace(/[^A-Za-zÁáÉéÍíÓóÚúÑñ0-9\s.,-]/g, '');
+    }
+
+    if (field === 'diagnostico') setDiagnostico(valorLimpio);
+    if (field === 'observaciones') setObservaciones(value);
+    if (field === 'fecha') setFecha(value);
+    if (field === 'selectedPaciente') setSelectedPaciente(value);
+  };
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
 
-    if (!selectedPaciente) {
-      alert('Error: Debe seleccionar un paciente.');
-      return;
-    }
-    if (medicamentos.length === 0) {
-      alert('Error: Debe agregar al menos un medicamento a la receta.');
-      return;
-    }
-    if (!diagnostico) {
-      alert('Error: Debe ingresar un diagnóstico.');
+    // Validar todos los campos de la receta
+    const datosReceta = {
+      pacienteId: selectedPaciente,
+      fecha,
+      diagnostico,
+      observaciones,
+      medicamentos
+    };
+
+    const resultadoValidacion = validarReceta(datosReceta);
+    
+    if (resultadoValidacion.hayErrores) {
+      setErrores(resultadoValidacion.errores);
+      alert('❌ Por favor corrige los errores en el formulario');
       return;
     }
 
@@ -96,8 +179,8 @@ function AgregarReceta() {
       pacienteId: parseInt(selectedPaciente),
       pacienteNombre: nombrePaciente,
       fecha: fecha,
-      diagnostico: diagnostico,
-      observaciones: observaciones,
+      diagnostico: diagnostico.trim(),
+      observaciones: observaciones.trim(),
       medicamentos: medicamentos,
       doctorId: doctorId
     };
@@ -108,11 +191,13 @@ function AgregarReceta() {
 
     alert(`✅ Receta asignada con éxito a ${nombrePaciente}.`);
 
+    // Limpiar formulario
     setMedicamentos([]);
     setSelectedPaciente("");
     setFecha(getTodayDate());
     setDiagnostico("");
     setObservaciones("");
+    setErrores({});
   };
 
   return (
@@ -125,11 +210,11 @@ function AgregarReceta() {
       <div className="user-form-card">
         <form onSubmit={handleFormSubmit}>
           <div className="form-group">
-            <label>Nombre(s)</label>
+            <label>Nombre(s) *</label>
             <select 
-              className="rol-input" 
+              className={`rol-input ${errores.pacienteId ? 'input-error' : ''}`}
               value={selectedPaciente}
-              onChange={(e) => setSelectedPaciente(e.target.value)}
+              onChange={(e) => handleChange('selectedPaciente', e.target.value)}
               required
             >
               <option value="" disabled>Selecciona un paciente</option>
@@ -139,27 +224,38 @@ function AgregarReceta() {
                 </option>
               ))}
             </select>
+            {errores.pacienteId && (
+              <span className="error-message">{errores.pacienteId}</span>
+            )}
           </div>
 
           <div className="form-group">
-            <label>Fecha de Emisión</label>
+            <label>Fecha de Emisión *</label>
             <input 
               type="date" 
               value={fecha}
-              onChange={(e) => setFecha(e.target.value)}
+              onChange={(e) => handleChange('fecha', e.target.value)}
               required
+              className={errores.fecha ? 'input-error' : ''}
             />
+            {errores.fecha && (
+              <span className="error-message">{errores.fecha}</span>
+            )}
           </div>
           
           <div className="form-group">
-            <label>Diagnóstico Principal</label>
+            <label>Diagnóstico Principal *</label>
             <input 
               type="text" 
               value={diagnostico}
-              onChange={(e) => setDiagnostico(e.target.value)}
+              onChange={(e) => handleChange('diagnostico', e.target.value)}
               placeholder="Infección respiratoria superior"
               required
+              className={errores.diagnostico ? 'input-error' : ''}
             />
+            {errores.diagnostico && (
+              <span className="error-message">{errores.diagnostico}</span>
+            )}
           </div>
           
           <div className="form-group">
@@ -167,13 +263,17 @@ function AgregarReceta() {
             <textarea 
               rows="4" 
               value={observaciones}
-              onChange={(e) => setObservaciones(e.target.value)}
+              onChange={(e) => handleChange('observaciones', e.target.value)}
               placeholder="Paciente con fiebre y tos persistente, se recomienda reposo y aumento de líquidos."
+              className={errores.observaciones ? 'input-error' : ''}
             ></textarea>
+            {errores.observaciones && (
+              <span className="error-message">{errores.observaciones}</span>
+            )}
           </div>
           
           <div className="form-group">
-            <label>Medicamentos</label>
+            <label>Medicamentos *</label>
             <div className="medicamentos-list">
               {medicamentos.length > 0 ? medicamentos.map((med, index) => (
                 <div key={index} className="medicamento-item">
@@ -202,6 +302,9 @@ function AgregarReceta() {
                 <p style={{textAlign: 'center', color: '#777'}}>No hay medicamentos agregados.</p>
               )}
             </div>
+            {errores.medicamentos && (
+              <span className="error-message">{errores.medicamentos}</span>
+            )}
           </div>
 
           <button 
