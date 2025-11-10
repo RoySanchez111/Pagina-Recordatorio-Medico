@@ -13,6 +13,7 @@ import AgregarReceta from './AgregarReceta';
 import VerRecetas from './VerRecetas';
 import GestionConsultas from './GestionConsultas';
 import Perfil from './Perfil';
+import ChangePassword from './ChangePassword'; // NUEVO IMPORT
 
 const ProtectedRoute = ({ children, rolPermitido }) => {
   const rol = localStorage.getItem('rol');
@@ -27,11 +28,21 @@ const ProtectedRoute = ({ children, rolPermitido }) => {
   return children;
 };
 
+// NUEVO: Ruta protegida común para ambos roles
+const CommonProtectedRoute = ({ children }) => {
+  const rol = localStorage.getItem('rol');
+  if (!rol) return <Navigate to="/login" replace />;
+  return children;
+};
+
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
+
+      {/* RUTA PÚBLICA PARA CAMBIO DE CONTRASEÑA */}
+      <Route path="/cambiar-contrasena" element={<ChangePassword />} />
 
       <Route
         path="/dashboard/*"
@@ -44,6 +55,7 @@ function App() {
         <Route path="usuarios" element={<Usuarios />} />
         <Route path="agregar-usuario" element={<AgregarUsuario />} />
         <Route path="editar-usuario" element={<EditarUsuario />} />
+        <Route path="cambiar-contrasena" element={<ChangePassword />} /> {/* NUEVA RUTA */}
         <Route index element={<Usuarios />} />
       </Route>
 
@@ -61,6 +73,7 @@ function App() {
         <Route path="ver-recetas" element={<VerRecetas />} />
         <Route path="gestionar-consultas" element={<GestionConsultas />} />
         <Route path="perfil" element={<Perfil />} />
+        <Route path="cambiar-contrasena" element={<ChangePassword />} /> {/* NUEVA RUTA */}
         <Route index element={<VerPacientes />} />
       </Route>
 
