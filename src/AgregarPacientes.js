@@ -203,7 +203,7 @@ function AgregarPacientes() {
                 usuariosActuales
             );
             setFormData(prev => ({ ...prev, claveUnica: nuevaClave }));
-            alert(La clave única ya existía. Se generó una nueva: ${nuevaClave});
+            alert(`La clave única ya existía. Se generó una nueva: ${nuevaClave}`);
             return;
         }
 
