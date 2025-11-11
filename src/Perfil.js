@@ -192,237 +192,360 @@ const Perfil = () => {
         setTipoMensaje('');
     };
 
-    return (
-        <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-            {/* TÍTULO PRINCIPAL */}
-            <h1 style={{ 
-                marginBottom: '30px', 
-                color: '#2c3e50',
-                fontSize: '32px',
-                fontWeight: 'bold',
-                textAlign: 'center'
-            }}>
-                Perfil
-            </h1>
+    // Estilos para mensajes
+    const getMessageStyles = () => {
+        const baseStyles = {
+            padding: '12px',
+            borderRadius: '6px',
+            margin: '15px 10px',
+            textAlign: 'center',
+            fontWeight: 'bold',
+            fontSize: '14px'
+        };
 
-            {/* Información del Doctor */}
+        if (tipoMensaje === 'error') {
+            return {
+                ...baseStyles,
+                backgroundColor: '#f8d7da',
+                color: '#721c24',
+                border: '1px solid #f5c6cb'
+            };
+        } else if (tipoMensaje === 'success') {
+            return {
+                ...baseStyles,
+                backgroundColor: '#d4edda',
+                color: '#155724',
+                border: '1px solid #c3e6cb'
+            };
+        }
+
+        return baseStyles;
+    };
+
+    return (
+        <div style={{ padding: '20px' }}>
+            {/* TÍTULO EN AZUL */}
+            <h2 style={{ marginBottom: '20px', color: '#3498db' }}>Perfil</h2>
+
+            {/* Tarjeta de información del doctor */}
             <div style={{
                 backgroundColor: 'white',
-                borderRadius: '12px',
-                padding: '30px',
-                marginBottom: '30px',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                border: '1px solid #e1e8ed'
+                borderRadius: '8px',
+                padding: '25px',
+                marginBottom: '20px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}>
-                <h2 style={{ 
-                    color: '#3498db',
+                <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
                     marginBottom: '25px',
-                    fontSize: '24px',
-                    fontWeight: '600',
-                    borderBottom: '2px solid #3498db',
-                    paddingBottom: '10px'
+                    paddingBottom: '15px',
+                    borderBottom: '1px solid #eee'
                 }}>
-                    Doctor
-                </h2>
-                
-                <div style={{ display: 'grid', gap: '20px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong style={{ color: '#2c3e50', fontSize: '16px' }}>Profesión:</strong>
-                        <span style={{ color: '#555' }}>{doctorData.especialidad}</span>
+                    <div style={{
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '50%',
+                        backgroundColor: '#3498db',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        marginRight: '15px'
+                    }}>
+                        {doctorData.nombre.charAt(0)}
+                    </div>
+                    <div>
+                        <h3 style={{ margin: '0 0 5px 0' }}>{doctorData.nombre} {doctorData.apellidos}</h3>
+                        <p style={{ margin: 0, color: '#666' }}>{doctorData.especialidad}</p>
+                    </div>
+                </div>
+
+                {/* Grid de información dividida en recuadros */}
+                <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+                    gap: '15px',
+                    marginBottom: '25px'
+                }}>
+                    <div style={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '6px',
+                        padding: '15px',
+                        backgroundColor: '#f9f9f9'
+                    }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>Nombre(s)</div>
+                        <div style={{ color: '#555' }}>{doctorData.nombre}</div>
                     </div>
                     
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong style={{ color: '#2c3e50', fontSize: '16px' }}>Nombre(s):</strong>
-                        <span style={{ color: '#555' }}>{doctorData.nombre}</span>
+                    <div style={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '6px',
+                        padding: '15px',
+                        backgroundColor: '#f9f9f9'
+                    }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>Sexo</div>
+                        <div style={{ color: '#555' }}>{doctorData.sexo}</div>
                     </div>
                     
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong style={{ color: '#2c3e50', fontSize: '16px' }}>Apellidos:</strong>
-                        <span style={{ color: '#555' }}>{doctorData.apellidos || 'No especificado'}</span>
+                    <div style={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '6px',
+                        padding: '15px',
+                        backgroundColor: '#f9f9f9'
+                    }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>Apellidos</div>
+                        <div style={{ color: '#555' }}>{doctorData.apellidos}</div>
                     </div>
                     
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong style={{ color: '#2c3e50', fontSize: '16px' }}>Número del Consultorio:</strong>
-                        <span style={{ color: '#555' }}>{doctorData.numeroConsultorio}</span>
+                    <div style={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '6px',
+                        padding: '15px',
+                        backgroundColor: '#f9f9f9'
+                    }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>Número del Consultorio</div>
+                        <div style={{ color: '#555' }}>{doctorData.numeroConsultorio}</div>
                     </div>
                     
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong style={{ color: '#2c3e50', fontSize: '16px' }}>Dirección del Consultorio:</strong>
-                        <span style={{ color: '#555' }}>{doctorData.direccionConsultorio}</span>
+                    <div style={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '6px',
+                        padding: '15px',
+                        backgroundColor: '#f9f9f9',
+                        gridColumn: '1 / -1'
+                    }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#333' }}>Dirección del Consultorio</div>
+                        <div style={{ color: '#555' }}>{doctorData.direccionConsultorio}</div>
                     </div>
+                </div>
+
+                <div style={{ textAlign: 'center' }}>
+                    <button 
+                        style={{
+                            backgroundColor: '#3498db',
+                            color: 'white',
+                            border: 'none',
+                            padding: '12px 30px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            fontWeight: 'bold',
+                            transition: 'background-color 0.3s'
+                        }}
+                        onMouseOver={(e) => e.target.style.backgroundColor = '#2980b9'}
+                        onMouseOut={(e) => e.target.style.backgroundColor = '#3498db'}
+                        onClick={() => setShowPasswordModal(true)}
+                    >
+                        Cambiar contraseña
+                    </button>
                 </div>
             </div>
 
-            {/* Sección de Cambio de Contraseña */}
-            <div style={{
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                padding: '30px',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                border: '1px solid #e1e8ed'
-            }}>
-                <h2 style={{ 
-                    color: '#3498db',
-                    marginBottom: '25px',
-                    fontSize: '24px',
-                    fontWeight: '600',
-                    borderBottom: '2px solid #3498db',
-                    paddingBottom: '10px'
+            {/* Modal para cambiar contraseña */}
+            {showPasswordModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.6)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000,
+                    padding: '20px'
                 }}>
-                    CAMBIAR CONTRASEÑA
-                </h2>
-
-                <form onSubmit={handlePasswordSubmit}>
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ 
-                            display: 'block', 
-                            marginBottom: '8px', 
-                            fontWeight: 'bold', 
-                            color: '#2c3e50',
-                            fontSize: '16px'
-                        }}>
-                            Contraseña actual
-                        </label>
-                        <input
-                            type="password"
-                            name="contrasenaActual"
-                            value={passwordData.contrasenaActual}
-                            onChange={handlePasswordChange}
-                            style={{ 
-                                width: '100%', 
-                                padding: '12px', 
-                                border: '2px solid #e0e0e0', 
-                                borderRadius: '8px',
-                                fontSize: '16px',
-                                transition: 'border-color 0.3s'
-                            }}
-                            placeholder="Ingresa tu contraseña actual"
-                            required
-                        />
-                    </div>
-
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ 
-                            display: 'block', 
-                            marginBottom: '8px', 
-                            fontWeight: 'bold', 
-                            color: '#2c3e50',
-                            fontSize: '16px'
-                        }}>
-                            Nueva contraseña
-                        </label>
-                        <input
-                            type="password"
-                            name="nuevaContrasena"
-                            value={passwordData.nuevaContrasena}
-                            onChange={handlePasswordChange}
-                            style={{ 
-                                width: '100%', 
-                                padding: '12px', 
-                                border: '2px solid #e0e0e0', 
-                                borderRadius: '8px',
-                                fontSize: '16px',
-                                transition: 'border-color 0.3s'
-                            }}
-                            placeholder="Ingresa nueva contraseña"
-                            required
-                        />
-                    </div>
-
-                    <div style={{ marginBottom: '25px' }}>
-                        <label style={{ 
-                            display: 'block', 
-                            marginBottom: '8px', 
-                            fontWeight: 'bold', 
-                            color: '#2c3e50',
-                            fontSize: '16px'
-                        }}>
-                            Confirmar contraseña
-                        </label>
-                        <input
-                            type="password"
-                            name="confirmarContrasena"
-                            value={passwordData.confirmarContrasena}
-                            onChange={handlePasswordChange}
-                            style={{ 
-                                width: '100%', 
-                                padding: '12px', 
-                                border: '2px solid #e0e0e0', 
-                                borderRadius: '8px',
-                                fontSize: '16px',
-                                transition: 'border-color 0.3s'
-                            }}
-                            placeholder="Confirma la contraseña"
-                            required
-                        />
-                    </div>
-
-                    {mensaje && (
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '35px',
+                        borderRadius: '12px',
+                        width: '100%',
+                        maxWidth: '450px',
+                        boxShadow: '0 8px 30px rgba(0,0,0,0.4)',
+                        border: '1px solid #e0e0e0'
+                    }}>
+                        {/* Header del modal */}
                         <div style={{
-                            padding: '12px',
-                            borderRadius: '6px',
-                            marginBottom: '20px',
                             textAlign: 'center',
-                            fontWeight: 'bold',
-                            backgroundColor: tipoMensaje === 'error' ? '#f8d7da' : '#d4edda',
-                            color: tipoMensaje === 'error' ? '#721c24' : '#155724',
-                            border: `1px solid ${tipoMensaje === 'error' ? '#f5c6cb' : '#c3e6cb'}`
+                            marginBottom: '30px',
+                            paddingBottom: '20px',
+                            borderBottom: '2px solid #3498db'
                         }}>
-                            {mensaje}
+                            <h3 style={{ 
+                                margin: 0,
+                                color: '#2c3e50',
+                                fontSize: '22px',
+                                fontWeight: 'bold'
+                            }}>
+                                CAMBIAR CONTRASEÑA
+                            </h3>
                         </div>
-                    )}
+                        
+                        <form onSubmit={handlePasswordSubmit}>
+                            {/* Campo Contraseña Actual */}
+                            <div style={{ 
+                                marginBottom: '25px',
+                                padding: '0 10px'
+                            }}>
+                                <div style={{ 
+                                    marginBottom: '12px', 
+                                    fontWeight: 'bold', 
+                                    color: '#2c3e50',
+                                    fontSize: '15px'
+                                }}>
+                                    Contraseña actual
+                                </div>
+                                <input
+                                    type="password"
+                                    name="contrasenaActual"
+                                    value={passwordData.contrasenaActual}
+                                    onChange={handlePasswordChange}
+                                    required
+                                    style={{ 
+                                        width: '100%', 
+                                        padding: '14px', 
+                                        border: '2px solid #e0e0e0', 
+                                        borderRadius: '8px',
+                                        fontSize: '16px',
+                                        transition: 'border-color 0.3s',
+                                        outline: 'none'
+                                    }}
+                                    onFocus={(e) => e.target.style.borderColor = '#3498db'}
+                                    onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+                                    placeholder="Ingresa tu contraseña actual"
+                                />
+                            </div>
 
-                    <div style={{ display: 'flex', gap: '15px' }}>
-                        <button 
-                            type="submit" 
-                            style={{ 
-                                backgroundColor: '#3498db',
-                                color: 'white',
-                                border: 'none',
-                                padding: '14px 30px',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                fontSize: '16px',
-                                fontWeight: 'bold',
-                                flex: 1,
-                                transition: 'background-color 0.3s'
-                            }}
-                            onMouseOver={(e) => e.target.style.backgroundColor = '#2980b9'}
-                            onMouseOut={(e) => e.target.style.backgroundColor = '#3498db'}
-                        >
-                            Cambiar contraseña
-                        </button>
-                        <button 
-                            type="button" 
-                            onClick={() => {
-                                setPasswordData({
-                                    contrasenaActual: '',
-                                    nuevaContrasena: '',
-                                    confirmarContrasena: ''
-                                });
-                                setMensaje('');
-                                setTipoMensaje('');
-                            }}
-                            style={{ 
-                                backgroundColor: '#95a5a6',
-                                color: 'white',
-                                border: 'none',
-                                padding: '14px 30px',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                fontSize: '16px',
-                                fontWeight: 'bold',
-                                flex: 1,
-                                transition: 'background-color 0.3s'
-                            }}
-                            onMouseOver={(e) => e.target.style.backgroundColor = '#7f8c8d'}
-                            onMouseOut={(e) => e.target.style.backgroundColor = '#95a5a6'}
-                        >
-                            Cancelar
-                        </button>
+                            {/* Campo Nueva Contraseña */}
+                            <div style={{ 
+                                marginBottom: '25px',
+                                padding: '0 10px'
+                            }}>
+                                <div style={{ 
+                                    marginBottom: '12px', 
+                                    fontWeight: 'bold', 
+                                    color: '#2c3e50',
+                                    fontSize: '15px'
+                                }}>
+                                    Nueva contraseña
+                                </div>
+                                <input
+                                    type="password"
+                                    name="nuevaContrasena"
+                                    value={passwordData.nuevaContrasena}
+                                    onChange={handlePasswordChange}
+                                    required
+                                    style={{ 
+                                        width: '100%', 
+                                        padding: '14px', 
+                                        border: '2px solid #e0e0e0', 
+                                        borderRadius: '8px',
+                                        fontSize: '16px',
+                                        transition: 'border-color 0.3s',
+                                        outline: 'none'
+                                    }}
+                                    onFocus={(e) => e.target.style.borderColor = '#3498db'}
+                                    onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+                                    placeholder="Ingresa nueva contraseña"
+                                />
+                            </div>
+
+                            {/* Campo Confirmar Contraseña */}
+                            <div style={{ 
+                                marginBottom: '25px',
+                                padding: '0 10px'
+                            }}>
+                                <div style={{ 
+                                    marginBottom: '12px', 
+                                    fontWeight: 'bold', 
+                                    color: '#2c3e50',
+                                    fontSize: '15px'
+                                }}>
+                                    Confirmar contraseña
+                                </div>
+                                <input
+                                    type="password"
+                                    name="confirmarContrasena"
+                                    value={passwordData.confirmarContrasena}
+                                    onChange={handlePasswordChange}
+                                    required
+                                    style={{ 
+                                        width: '100%', 
+                                        padding: '14px', 
+                                        border: '2px solid #e0e0e0', 
+                                        borderRadius: '8px',
+                                        fontSize: '16px',
+                                        transition: 'border-color 0.3s',
+                                        outline: 'none'
+                                    }}
+                                    onFocus={(e) => e.target.style.borderColor = '#3498db'}
+                                    onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+                                    placeholder="Confirma la contraseña"
+                                />
+                            </div>
+
+                            {/* Mensaje de estado */}
+                            {mensaje && (
+                                <div style={getMessageStyles()}>
+                                    {mensaje}
+                                </div>
+                            )}
+
+                            {/* Botones */}
+                            <div style={{ 
+                                display: 'flex', 
+                                gap: '15px',
+                                justifyContent: 'center',
+                                padding: '0 10px'
+                            }}>
+                                <button 
+                                    type="submit" 
+                                    style={{ 
+                                        backgroundColor: '#27ae60',
+                                        color: 'white',
+                                        border: 'none',
+                                        padding: '14px 30px',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        fontSize: '16px',
+                                        fontWeight: 'bold',
+                                        flex: 1,
+                                        transition: 'background-color 0.3s'
+                                    }}
+                                    onMouseOver={(e) => e.target.style.backgroundColor = '#219a52'}
+                                    onMouseOut={(e) => e.target.style.backgroundColor = '#27ae60'}
+                                >
+                                    Cambiar
+                                </button>
+                                <button 
+                                    type="button" 
+                                    onClick={closeModal}
+                                    style={{ 
+                                        backgroundColor: '#95a5a6',
+                                        color: 'white',
+                                        border: 'none',
+                                        padding: '14px 30px',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        fontSize: '16px',
+                                        fontWeight: 'bold',
+                                        flex: 1,
+                                        transition: 'background-color 0.3s'
+                                    }}
+                                    onMouseOver={(e) => e.target.style.backgroundColor = '#7f8c8d'}
+                                    onMouseOut={(e) => e.target.style.backgroundColor = '#95a5a6'}
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                </form>
-            </div>
+                </div>
+            )}
         </div>
     );
 };
