@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import usuariosData from './usuarios.json';
 import agregarAzul from './assets/agregar-azul.png';
@@ -76,6 +76,40 @@ const validarPaciente = (pacienteData) => {
     };
 };
 
+// Función para generar clave única
+const generarClaveUnica = (nombreCompleto, fechaNacimiento, usuariosExistentes) => {
+    if (!nombreCompleto || !fechaNacimiento) return '';
+
+    // Dividir el nombre completo en partes
+    const partesNombre = nombreCompleto.trim().split(' ');
+    
+    // Obtener primera letra del nombre
+    const primeraLetraNombre = partesNombre[0] ? partesNombre[0].charAt(0).toUpperCase() : '';
+    
+    // Obtener primera letra del apellido paterno (segunda palabra)
+    const primeraLetraPaterno = partesNombre[1] ? partesNombre[1].charAt(0).toUpperCase() : '';
+    
+    // Obtener primera letra del apellido materno (tercera palabra si existe)
+    const primeraLetraMaterno = partesNombre[2] ? partesNombre[2].charAt(0).toUpperCase() : '';
+    
+    // Obtener año de nacimiento
+    const añoNacimiento = new Date(fechaNacimiento).getFullYear();
+    
+    // Generar clave base
+    let claveBase = primeraLetraNombre + primeraLetraPaterno + primeraLetraMaterno + añoNacimiento;
+    
+    // Verificar si la clave ya existe y generar variantes si es necesario
+    let claveFinal = claveBase;
+    let contador = 1;
+    
+    while (usuariosExistentes.some(usuario => usuario.claveUnica === claveFinal)) {
+        claveFinal = claveBase + contador;
+        contador++;
+    }
+    
+    return claveFinal;
+};
+
 function AgregarPacientes() {
     const [formData, setFormData] = useState({
         nombreCompleto: '',
@@ -85,10 +119,18 @@ function AgregarPacientes() {
         nacimiento: '',
         tipoSangre: '',
         alergias: '',
-        enfermedadesCronicas: ''
+        enfermedadesCronicas: '',
+        claveUnica: ''
     });
 
     const [errores, setErrores] = useState({});
+    const [usuariosExistentes, setUsuariosExistentes] = useState([]);
+
+    // Cargar usuarios existentes al montar el componente
+    useEffect(() => {
+        const usuariosGuardados = JSON.parse(localStorage.getItem('usuarios')) || usuariosData;
+        setUsuariosExistentes(usuariosGuardados);
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -108,7 +150,22 @@ function AgregarPacientes() {
             valorLimpio = value.replace(/[^A-Za-zÁáÉéÍíÓóÚúÑñ\s]/g, '');
         }
 
-        setFormData(prev => ({ ...prev, [name]: valorLimpio }));
+        const nuevosDatos = { ...formData, [name]: valorLimpio };
+        setFormData(nuevosDatos);
+
+        // Generar clave única cuando cambie el nombre o la fecha de nacimiento
+        if (name === 'nombreCompleto' || name === 'nacimiento') {
+            if (nuevosDatos.nombreCompleto && nuevosDatos.nacimiento) {
+                const claveGenerada = generarClaveUnica(
+                    nuevosDatos.nombreCompleto, 
+                    nuevosDatos.nacimiento, 
+                    usuariosExistentes
+                );
+                setFormData(prev => ({ ...prev, claveUnica: claveGenerada }));
+            } else {
+                setFormData(prev => ({ ...prev, claveUnica: '' }));
+            }
+        }
     };
 
     const handleSubmit = (e) => {
@@ -123,6 +180,12 @@ function AgregarPacientes() {
             return;
         }
 
+        // Validar que se generó una clave única
+        if (!formData.claveUnica) {
+            alert('Error: No se pudo generar la clave única. Verifique los datos del paciente.');
+            return;
+        }
+
         const doctorId = parseInt(localStorage.getItem('userId'));
         if (!doctorId) {
             alert('Error: No se pudo identificar al doctor. Por favor, inicie sesion de nuevo.');
@@ -130,6 +193,19 @@ function AgregarPacientes() {
         }
 
         const usuariosActuales = JSON.parse(localStorage.getItem('usuarios')) || usuariosData;
+
+        // Verificar que la clave única no exista (doble verificación)
+        if (usuariosActuales.some(usuario => usuario.claveUnica === formData.claveUnica)) {
+            // Regenerar clave única si ya existe
+            const nuevaClave = generarClaveUnica(
+                formData.nombreCompleto, 
+                formData.nacimiento, 
+                usuariosActuales
+            );
+            setFormData(prev => ({ ...prev, claveUnica: nuevaClave }));
+            alert(La clave única ya existía. Se generó una nueva: ${nuevaClave});
+            return;
+        }
 
         const nuevoPaciente = {
             id: usuariosActuales.length + 1,
@@ -142,13 +218,14 @@ function AgregarPacientes() {
             tipoSangre: formData.tipoSangre,
             alergias: formData.alergias.trim(),
             padecimiento: formData.enfermedadesCronicas.trim(),
-            doctorId: doctorId 
+            doctorId: doctorId,
+            claveUnica: formData.claveUnica // ← Nueva clave única
         };
 
         const usuariosActualizados = [...usuariosActuales, nuevoPaciente];
         localStorage.setItem('usuarios', JSON.stringify(usuariosActualizados));
 
-        alert('Paciente agregado con exito');
+        alert(Paciente agregado con exito\nClave única: ${formData.claveUnica});
 
         setFormData({
             nombreCompleto: '',
@@ -158,7 +235,8 @@ function AgregarPacientes() {
             nacimiento: '',
             tipoSangre: '',
             alergias: '',
-            enfermedadesCronicas: ''
+            enfermedadesCronicas: '',
+            claveUnica: ''
         });
         setErrores({});
     };
@@ -179,7 +257,7 @@ function AgregarPacientes() {
                             name="nombreCompleto"
                             value={formData.nombreCompleto}
                             onChange={handleChange}
-                            placeholder="Ej. Leonel Salvador Lugo Escobar"
+                            placeholder="Ej. Rafael Flores López"
                             required
                             className={errores.nombreCompleto ? 'input-error' : ''}
                         />
@@ -204,6 +282,25 @@ function AgregarPacientes() {
                         {errores.sexo && (
                             <span className="error-message">{errores.sexo}</span>
                         )}
+                    </div>
+
+                    <div className="form-group">
+                        <label>Clave Única</label>
+                        <input
+                            type="text"
+                            name="claveUnica"
+                            value={formData.claveUnica}
+                            readOnly
+                            placeholder="Se generará automáticamente"
+                            style={{ 
+                                backgroundColor: '#f5f5f5',
+                                border: '1px solid #ddd',
+                                color: '#666'
+                            }}
+                        />
+                        <small style={{ color: '#666', fontSize: '12px' }}>
+                            Formato: Primera letra nombre + apellido paterno + apellido materno + año nacimiento
+                        </small>
                     </div>
 
                     <div className="form-group">
