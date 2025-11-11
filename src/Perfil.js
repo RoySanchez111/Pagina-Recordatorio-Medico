@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 const Perfil = () => {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [passwordData, setPasswordData] = useState({
+        contrasenaActual: '',
         nuevaContrasena: '',
         confirmarContrasena: ''
     });
@@ -49,13 +50,29 @@ const Perfil = () => {
     const handlePasswordSubmit = (e) => {
         e.preventDefault();
         
-        if (passwordData.nuevaContrasena !== passwordData.confirmarContrasena) {
-            alert('Las contraseñas no coinciden');
+        // Validar que la contraseña actual no esté vacía
+        if (!passwordData.contrasenaActual) {
+            alert('Por favor ingresa tu contraseña actual');
             return;
         }
 
+        if (passwordData.nuevaContrasena !== passwordData.confirmarContrasena) {
+            alert('Las nuevas contraseñas no coinciden');
+            return;
+        }
+
+        // Validar que la nueva contraseña no sea igual a la actual
+        if (passwordData.contrasenaActual === passwordData.nuevaContrasena) {
+            alert('La nueva contraseña no puede ser igual a la actual');
+            return;
+        }
+
+        // Aquí deberías agregar la lógica para verificar la contraseña actual
+        // con tu sistema de autenticación
+
         alert('Contraseña cambiada exitosamente');
         setPasswordData({
+            contrasenaActual: '',
             nuevaContrasena: '',
             confirmarContrasena: ''
         });
@@ -65,6 +82,7 @@ const Perfil = () => {
     const closeModal = () => {
         setShowPasswordModal(false);
         setPasswordData({
+            contrasenaActual: '',
             nuevaContrasena: '',
             confirmarContrasena: ''
         });
@@ -234,6 +252,40 @@ const Perfil = () => {
                         </div>
                         
                         <form onSubmit={handlePasswordSubmit}>
+                            {/* Campo Contraseña Actual */}
+                            <div style={{ 
+                                marginBottom: '25px',
+                                padding: '0 10px'
+                            }}>
+                                <div style={{ 
+                                    marginBottom: '12px', 
+                                    fontWeight: 'bold', 
+                                    color: '#2c3e50',
+                                    fontSize: '15px'
+                                }}>
+                                    Contraseña actual
+                                </div>
+                                <input
+                                    type="password"
+                                    name="contrasenaActual"
+                                    value={passwordData.contrasenaActual}
+                                    onChange={handlePasswordChange}
+                                    required
+                                    style={{ 
+                                        width: '100%', 
+                                        padding: '14px', 
+                                        border: '2px solid #e0e0e0', 
+                                        borderRadius: '8px',
+                                        fontSize: '16px',
+                                        transition: 'border-color 0.3s',
+                                        outline: 'none'
+                                    }}
+                                    onFocus={(e) => e.target.style.borderColor = '#3498db'}
+                                    onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+                                    placeholder="Ingresa tu contraseña actual"
+                                />
+                            </div>
+
                             {/* Campo Nueva Contraseña */}
                             <div style={{ 
                                 marginBottom: '25px',
