@@ -5,10 +5,10 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
   const [formData, setFormData] = useState({
     nombre: "",
     dosis: "",
-    frecuencia: "", // Se espera un número
+    frecuencia: "", // La paso a numero
     duracion: "",
     instrucciones: "",
-    primeraIngesta: "", // Nuevo campo
+    primeraIngesta: "", // Campo para la hora de la primera toma
   });
 
   useEffect(() => {
@@ -46,15 +46,14 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
     onSave(formData);
   };
 
-  // --- Lógica para calcular horario ---
+  // Lógica para calcular horario
 
-  /**
-   * Convierte una hora (0-23) y minutos a formato 12-horas AM/PM
-   */
+  // Convierte una hora (0-23) y minutos a formato 12-horas AM/PM
+
   const formatTime = (hour, minute) => {
     const ampm = hour >= 12 ? "PM" : "AM";
     let displayHour = hour % 12;
-    if (displayHour === 0) displayHour = 12; // 12 AM (00:xx) o 12 PM (12:xx)
+    if (displayHour === 0) displayHour = 12;
 
     // Media noche especial
     if (hour === 0 && minute === 0) return "12:00 AM (Media Noche)";
@@ -65,22 +64,21 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
     return `${displayHour}:${displayMinute} ${ampm}`;
   };
 
-  /**
-   * Calcula la lista de horarios basada en la hora de inicio y la frecuencia
-   */
+  // Calcular los horarios basada en la hora de inicio y la frecuencia
   const calcularHorario = (primeraIngesta, frecuencia) => {
     const frecuenciaNum = parseInt(frecuencia, 10);
 
-    // Validar que tengamos los datos necesarios y que la frecuencia sea un número válido
+    // Validar que tengamos los datos necesarios
     if (!primeraIngesta || isNaN(frecuenciaNum) || frecuenciaNum <= 0) {
       return "";
     }
 
-    // Parsear la hora de inicio, ej "08:30" -> [8, 30]
+    // Compertir a numero entero la hora de inicio, ej "08:30" -> [8, 30]
     const [startHour, startMinute] = primeraIngesta.split(":").map(Number);
 
+    // Formato de hora inválido
     if (isNaN(startHour) || isNaN(startMinute)) {
-      return ""; // Formato de hora inválido
+      return "";
     }
 
     let horarios = [];
@@ -102,8 +100,6 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
 
     return horarios.join(" - ");
   };
-
-  // --- Fin de la lógica ---
 
   if (!isOpen) {
     return null;
