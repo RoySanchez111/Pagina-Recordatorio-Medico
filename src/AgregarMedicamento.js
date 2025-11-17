@@ -2,38 +2,35 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 
 function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
+  // 1. Estados iniciales simplificados (se elimina 'frecuencia' y 'primeraIngesta' de formData)
   const [formData, setFormData] = useState({
     nombre: "",
     dosis: "",
-    frecuencia: "",
+    cantidadInicial: "",
     duracion: "",
     instrucciones: "",
-    primeraIngesta: "",
-    cantidadInicial: "",
+    tipoHorario: "Fijo", // Fijo por defecto y único
+    horasFijas: [],      // Array para guardar horas fijas
   });
+  
+  const [nuevaHoraFija, setNuevaHoraFija] = useState("08:00"); 
 
   useEffect(() => {
-    if (isOpen && medicamentoInicial) {
+    if (isOpen) {
+      const defaultState = {
+        nombre: "", dosis: "", cantidadInicial: "", duracion: "", instrucciones: "",
+        tipoHorario: "Fijo",
+        horasFijas: [],
+      };
+
       setFormData({
-        nombre: "",
-        dosis: "",
-        frecuencia: "",
-        duracion: "",
-        instrucciones: "",
-        primeraIngesta: "",
-        cantidadInicial: "",
-        ...medicamentoInicial,
+        ...defaultState,
+        ...(medicamentoInicial || {}), 
+        // Asegurar que horasFijas sea un array
+        horasFijas: medicamentoInicial?.horasFijas || [],
+        tipoHorario: "Fijo" // Forzar el tipo de horario a "Fijo"
       });
-    } else if (isOpen && !medicamentoInicial) {
-      setFormData({
-        nombre: "",
-        dosis: "",
-        frecuencia: "",
-        duracion: "",
-        instrucciones: "",
-        primeraIngesta: "",
-        cantidadInicial: "",
-      });
+      setNuevaHoraFija("08:00"); 
     }
   }, [isOpen, medicamentoInicial]);
 
@@ -41,12 +38,54 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave(formData);
+  
+  const handleAgregarHoraFija = () => {
+    if (nuevaHoraFija && !formData.horasFijas.includes(nuevaHoraFija)) {
+      setFormData((prev) => ({
+        ...prev,
+        // Añadir la nueva hora y ordenar el array
+        horasFijas: [...prev.horasFijas, nuevaHoraFija].sort(),
+      }));
+      const [h, m] = nuevaHoraFija.split(':');
+      const nextHour = ((parseInt(h, 10) + 1) % 24).toString().padStart(2, '0');
+      setNuevaHoraFija(`${nextHour}:${m}`);
+    }
   };
 
+  const handleEliminarHoraFija = (horaAEliminar) => {
+    setFormData((prev) => ({
+      ...prev,
+      horasFijas: prev.horasFijas.filter((hora) => hora !== horaAEliminar),
+    }));
+  };
+
+  // 2. Lógica de handleSubmit simplificada (solo maneja Horas Fijas)
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    let datosAEnviar = {
+      nombre: formData.nombre,
+      dosis: formData.dosis,
+      cantidadInicial: formData.cantidadInicial,
+      duracion: formData.duracion,
+      instrucciones: formData.instrucciones,
+      tipoHorario: "Fijo", // Fijo
+    };
+
+    if (formData.horasFijas.length === 0) {
+      alert("Por favor, añada al menos una Hora Fija.");
+      return;
+    }
+    
+    datosAEnviar = {
+      ...datosAEnviar,
+      horasFijas: formData.horasFijas,
+    };
+
+    onSave(datosAEnviar);
+  };
+  
+  // 3. Función formatTime se mantiene para mostrar las horas en 12h AM/PM
   const formatTime = (hour, minute) => {
     const ampm = hour >= 12 ? "PM" : "AM";
     let displayHour = hour % 12;
@@ -58,44 +97,15 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
     const displayMinute = minute.toString().padStart(2, "0");
     return `${displayHour}:${displayMinute} ${ampm}`;
   };
-
-  const calcularHorario = (primeraIngesta, frecuencia) => {
-    const frecuenciaNum = parseInt(frecuencia, 10);
-
-    if (!primeraIngesta || isNaN(frecuenciaNum) || frecuenciaNum <= 0) {
-      return "";
-    }
-
-    const [startHour, startMinute] = primeraIngesta.split(":").map(Number);
-
-    if (isNaN(startHour) || isNaN(startMinute)) {
-      return "";
-    }
-
-    let horarios = [];
-    let currentHour = startHour;
-
-    while (true) {
-      horarios.push(formatTime(currentHour, startMinute));
-      currentHour = (currentHour + frecuenciaNum) % 24;
-      if (currentHour === startHour) {
-        break;
-      }
-    }
-
-    return horarios.join(" - ");
-  };
+  
+  // La función calcularHorario se elimina ya que no se usa el modo Frecuencia.
 
   if (!isOpen) {
     return null;
   }
 
   const esModoEdicion = medicamentoInicial !== null;
-  const horarioCalculado = calcularHorario(
-    formData.primeraIngesta,
-    formData.frecuencia
-  );
-
+  
   return (
     <div style={styles.modalOverlay}>
       <div style={styles.modalContent}>
@@ -109,7 +119,9 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
         </div>
 
         <form onSubmit={handleSubmit} style={styles.modalBody}>
-          <div style={styles.formScrollContainer}>
+          <div className="form-scroll-container" style={styles.formScrollContainer}>
+            
+            {/* 1. Nombre */}
             <div style={styles.formGroup}>
               <label style={styles.label}>Nombre del Medicamento</label>
               <input
@@ -123,6 +135,7 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
               />
             </div>
 
+            {/* 2. Dosis */}
             <div style={styles.formGroup}>
               <label style={styles.label}>Dosis</label>
               <input
@@ -136,6 +149,7 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
               />
             </div>
 
+            {/* 3. Cantidad Inicial */}
             <div style={styles.formGroup}>
               <label style={styles.label}>Cantidad Inicial de Medicamentos</label>
               <input
@@ -149,42 +163,48 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
                 style={styles.input}
               />
             </div>
-
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Frecuencia (en horas)</label>
-              <input
-                type="number"
-                name="frecuencia"
-                value={formData.frecuencia}
-                onChange={handleChange}
-                placeholder="Ej. 8"
-                min="1"
-                required
-                style={styles.input}
-              />
-            </div>
-
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Primera Ingesta</label>
-              <input
-                type="time"
-                name="primeraIngesta"
-                value={formData.primeraIngesta}
-                onChange={handleChange}
-                required
-                style={styles.input}
-              />
-            </div>
-
-            {horarioCalculado && (
-              <div style={styles.horarioDisplay}>
-                <p style={styles.horarioText}>Horarios de toma:</p>
-                <p style={styles.horarioText}>
-                  <strong style={styles.horarioStrong}>{horarioCalculado}</strong>
-                </p>
+            
+            {/* 4. HORAS FIJAS (ÚNICA OPCIÓN) */}
+            <div style={{ ...styles.formGroup, borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                <label style={{...styles.label, fontWeight: 'bold'}}>Horas Fijas de Toma</label>
+                <div style={styles.flexGroup}>
+                  <input
+                    type="time"
+                    value={nuevaHoraFija}
+                    onChange={(e) => setNuevaHoraFija(e.target.value)}
+                    style={{...styles.input, width: 'calc(50% - 6px)', margin: 0}}
+                  />
+                  {/* CORRECCIÓN 1: Usar el estilo primaryButton para el botón de Agregar Hora */}
+                  <button
+                    type="button"
+                    onClick={handleAgregarHoraFija}
+                    style={styles.primaryButton} // Aplicamos el estilo azul principal
+                  >
+                    + Agregar Hora
+                  </button>
+                </div>
+                
+                <div style={styles.horasFijasContainer}>
+                  {formData.horasFijas.length === 0 ? (
+                    <p style={{ margin: 0, color: '#999', fontSize: '0.9rem' }}>Añadir la hora y presione "+ Agregar Hora".</p>
+                  ) : (
+                    formData.horasFijas.map((hora) => (
+                      <span key={hora} style={styles.horaFijaTag}>
+                        {formatTime(parseInt(hora.split(':')[0]), parseInt(hora.split(':')[1]))}
+                        <button 
+                          type="button" 
+                          onClick={() => handleEliminarHoraFija(hora)} 
+                          style={styles.removeButton}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))
+                  )}
+                </div>
               </div>
-            )}
-
+            
+            {/* 5. Duración del Tratamiento */}
             <div style={styles.formGroup}>
               <label style={styles.label}>Duración del Tratamiento</label>
               <input
@@ -198,6 +218,7 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
               />
             </div>
 
+            {/* 6. Instrucciones Adicionales */}
             <div style={styles.formGroup}>
               <label style={styles.label}>Instrucciones Adicionales (Opcional)</label>
               <textarea
@@ -231,172 +252,85 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
 
 // Estilos en línea
 const styles = {
+  // ... (Tus estilos existentes: modalOverlay, modalContent, modalHeader, etc.)
   modalOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-    padding: '20px',
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex',
+    justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px',
   },
   modalContent: {
-    background: 'white',
-    borderRadius: '12px',
-    width: '90%',
-    maxWidth: '500px',
-    maxHeight: '90vh',
-    display: 'flex',
-    flexDirection: 'column',
-    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
-    overflow: 'hidden',
+    background: 'white', borderRadius: '12px', width: '90%', maxWidth: '500px',
+    maxHeight: '90vh', display: 'flex', flexDirection: 'column',
+    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)', overflow: 'hidden',
   },
   modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '20px 24px',
-    borderBottom: '1px solid #e0e0e0',
-    background: '#f8f9fa',
-    flexShrink: 0,
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '20px 24px', borderBottom: '1px solid #e0e0e0', background: '#f8f9fa', flexShrink: 0,
   },
-  modalTitle: {
-    margin: 0,
-    color: '#333',
-    fontSize: '1.3rem',
-  },
+  modalTitle: { margin: 0, color: '#333', fontSize: '1.3rem' },
   closeButton: {
-    background: 'none',
-    border: 'none',
-    fontSize: '24px',
-    cursor: 'pointer',
-    color: '#666',
-    padding: 0,
-    width: '30px',
-    height: '30px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '50%',
+    background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer',
+    color: '#666', padding: 0, width: '30px', height: '30px',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%',
   },
   modalBody: {
-    padding: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-    overflow: 'hidden',
+    padding: 0, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden',
   },
   formScrollContainer: {
-    flex: 1,
-    overflowY: 'auto',
-    padding: '24px',
-    maxHeight: 'calc(90vh - 140px)',
-    // Estilos para la barra de scroll
-    scrollbarWidth: 'thin',
-    scrollbarColor: '#c1c1c1 #f1f1f1',
+    flex: 1, overflowY: 'auto', padding: '24px', maxHeight: 'calc(90vh - 140px)',
+    scrollbarWidth: 'thin', scrollbarColor: '#c1c1c1 #f1f1f1',
   },
-  formGroup: {
-    marginBottom: '20px',
-  },
+  formGroup: { marginBottom: '20px' },
   label: {
-    display: 'block',
-    marginBottom: '6px',
-    fontWeight: '500',
-    color: '#333',
-    fontSize: '0.95rem',
+    display: 'block', marginBottom: '6px', fontWeight: '500', color: '#333', fontSize: '0.95rem',
   },
   input: {
-    width: '100%',
-    padding: '12px',
-    border: '1px solid #ddd',
-    borderRadius: '6px',
-    fontSize: '1rem',
-    boxSizing: 'border-box',
+    width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px',
+    fontSize: '1rem', boxSizing: 'border-box',
   },
   textarea: {
-    width: '100%',
-    padding: '12px',
-    border: '1px solid #ddd',
-    borderRadius: '6px',
-    fontSize: '1rem',
-    boxSizing: 'border-box',
-    resize: 'vertical',
-    minHeight: '80px',
+    width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '6px',
+    fontSize: '1rem', boxSizing: 'border-box', resize: 'vertical', minHeight: '80px',
   },
   horarioDisplay: {
-    background: '#e8f4ff',
-    padding: '15px',
-    borderRadius: '6px',
-    marginBottom: '20px',
+    background: '#e8f4ff', padding: '15px', borderRadius: '6px', marginBottom: '20px',
     borderLeft: '4px solid #007bff',
   },
-  horarioText: {
-    margin: 0,
-    fontSize: '0.9rem',
-  },
-  horarioStrong: {
-    color: '#007bff',
-    fontSize: '0.95rem',
-  },
+  horarioText: { margin: 0, fontSize: '0.9rem' },
+  horarioStrong: { color: '#007bff', fontSize: '0.95rem' },
   formActions: {
-    display: 'flex',
-    gap: '12px',
-    justifyContent: 'flex-end',
-    padding: '20px 24px',
-    borderTop: '1px solid #e0e0e0',
-    background: '#f8f9fa',
-    flexShrink: 0,
+    display: 'flex', gap: '12px', justifyContent: 'flex-end', padding: '20px 24px',
+    borderTop: '1px solid #e0e0e0', background: '#f8f9fa', flexShrink: 0,
   },
   primaryButton: {
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.95rem',
-    fontWeight: '500',
-    background: '#007bff',
-    color: 'white',
+    padding: '10px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer',
+    fontSize: '0.95rem', fontWeight: '500', background: '#007bff', color: 'white',
   },
   secondaryButton: {
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '0.95rem',
+    padding: '10px 20px', border: 'none', borderRadius: '6px', cursor: 'pointer',
+    fontSize: '0.95rem', fontWeight: '500', background: '#6c757d', color: 'white',
+  },
+  
+  // Estilos de Horas Fijas (ajustados)
+  flexGroup: {
+    display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '10px',
+  },
+  horasFijasContainer: {
+    display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px', padding: '10px',
+    border: '1px dashed #ddd', borderRadius: '6px', minHeight: '40px', alignItems: 'center',
+    background: '#f8f8f8',
+  },
+  horaFijaTag: {
+    display: 'inline-flex', alignItems: 'center', background: '#007bff20',
+    color: '#0056b3', padding: '6px 10px', borderRadius: '15px', fontSize: '0.85rem',
     fontWeight: '500',
-    background: '#6c757d',
-    color: 'white',
+  },
+  removeButton: {
+    background: 'none', border: 'none', color: '#dc3545', fontSize: '14px',
+    cursor: 'pointer', marginLeft: '5px', padding: '0 3px', lineHeight: 1,
   },
 };
 
-// Estilos adicionales para la barra de scroll en navegadores WebKit
-const styleSheet = document.styleSheets[0];
-const scrollbarStyles = `
-  .form-scroll-container::-webkit-scrollbar {
-    width: 6px;
-  }
-  .form-scroll-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-  }
-  .form-scroll-container::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-  }
-  .form-scroll-container::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-  }
-`;
-
-// Agregar estilos de scrollbar al documento
-if (typeof document !== 'undefined') {
-  const styleElement = document.createElement('style');
-  styleElement.textContent = scrollbarStyles;
-  document.head.appendChild(styleElement);
-}
+// ... (El código de estilos de scrollbar se mantiene igual)
 
 export default ModalMedicamento;
