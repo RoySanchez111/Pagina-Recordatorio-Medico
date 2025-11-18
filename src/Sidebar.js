@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import './App.css'; 
 
 // Importa tus imágenes
-import logo from './assets/image.png'; 
+import heartbeatLogo from './assets/heartbeat_logo.png';
 import usuariosAzul from './assets/usuarios-azul.png';
 import usuariosNegro from './assets/usuarios-negro.png';
 import agregarAzul from './assets/agregar-azul.png';
@@ -25,7 +25,16 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
             
             {/* --- LOGO --- */}
             <div className="logo-section">
-                <span className="logo-text">[ LOGO ]</span>
+                <img 
+                    src={heartbeatLogo} 
+                    alt="Heartbeat Logo" 
+                    className="logo-image"
+                    style={{
+                        maxWidth: isCollapsed ? '50px' : '150px',
+                        height: 'auto',
+                        objectFit: 'contain'
+                    }}
+                />
             </div>
 
             {/* --- NAVEGACIÓN --- */}
