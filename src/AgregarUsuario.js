@@ -71,10 +71,15 @@ function AgregarUsuario() {
   // );
 
   const handleChange = (e) => {
+    
     const { name, value } = e.target;
     
     if (errores[name]) {
       setErrores(prev => ({ ...prev, [name]: '' }));
+      if (name === 'contraseña') {
+    return; // bloquea escritura completamente
+  }
+
     }
 
     let valorLimpio = value;
@@ -119,12 +124,36 @@ function AgregarUsuario() {
       reader.readAsDataURL(file);
     }
   };
+    const regenerarContraseña = () => {
+      const nuevaContraseña = generarContraseñaAutomatica();
+      setFormData(prev => ({ ...prev, contraseña: nuevaContraseña }));
+    };
+
+  // Genera automáticamente una contraseña de 6 dígitos
+  const generarContraseñaAutomatica = () => {
+    const caracteres = '0123456789';
+    let contraseña = '';
+    const longitud = 6;
+
+    for (let i = 0; i < longitud; i++) {
+        contraseña += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+    }
+
+    return contraseña;
+  };
 
   const handleRolChange = (e) => {
     const valor = e.target.value;
     setRol(valor);
     setMostrarCampos(!!valor);
     setErrores({});
+
+    // --- AGREGADO: Generar contraseña automática ---
+    const nuevaContraseña = generarContraseñaAutomatica();
+    setFormData(prev => ({
+      ...prev,
+      contraseña: nuevaContraseña
+    }));
   };
 
   // <-- MODIFICADO COMPLETAMENTE: Ahora llama a la API
@@ -315,27 +344,51 @@ function AgregarUsuario() {
                   </div>
                   
                   <div className="form-group full">
-                    <label>Contraseña *</label>
-                    <input 
-                      type="text" 
-                      name="contraseña" 
-                      value={formData.contraseña || ''}
-                      onChange={handleChange}
-                      placeholder="Letras y numeros (max 20 caracteres, sin espacios)"
-                      required
-                      style={{ 
-                        width: '100%',
-                        backgroundColor: 'white',
-                        border: errores.contraseña ? '1px solid #dc3545' : '1px solid #ddd'
-                      }}
-                    />
-                    <small style={{ color: '#666', fontSize: '12px' }}>
-                      La contraseña debe contener solo letras y numeros (maximo 20 caracteres, sin espacios)
-                    </small>
-                    {errores.contraseña && (
-                      <span className="error-message">{errores.contraseña}</span>
-                    )}
+                    {/* 1. Etiqueta separada para que quede arriba */}
+                    <label style={{
+                      display: 'block', // Asegura que ocupe su propia línea
+                      marginBottom: '5px', // Agrega un espacio pequeño debajo de la etiqueta
+                      fontWeight: 'bold' // Opcional: para que se vea como un título de campo
+                    }}>
+                      Contraseña
+                    </label>
+
+                    {/* 2. Nuevo contenedor Flex para alinear solo el Input y el Botón */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <input
+                        type="text"
+                        name="contraseña"
+                        value={formData.contraseña || ''}
+                        readOnly
+                        style={{
+                          flex: '1',
+                          backgroundColor: '#f2f2f2',
+                          cursor: 'not-allowed',
+                          border: errores.contraseña ? '1px solid #dc3545' : '1px solid #ddd',
+                          height: '42px',
+                          paddingLeft: '10px',
+                          fontSize: '16px'
+                        }}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nueva = generarContraseñaAutomatica();
+                          setFormData(prev => ({ ...prev, contraseña: nueva }));
+                        }}
+                        className="btn btn-primary"
+                        style={{
+                          height: '42px',
+                          padding: '0 16px',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        Regenerar
+                      </button>
+                    </div>
                   </div>
+
                   
                   <div className="form-group full-width">
                     <label>Direccion de consultorio</label>
@@ -384,28 +437,52 @@ function AgregarUsuario() {
                     )}
                   </div>
                   
-                  <div className="form-group full-width">
-                    <label>Contraseña *</label>
-                    <input 
-                      type="text" 
-                      name="contraseña" 
-                      value={formData.contraseña || ''}
-                      onChange={handleChange}
-                      placeholder="Letras y numeros (max 20 caracteres, sin espacios)"
-                      required
-                      style={{ 
-                        width: '100%',
-                        backgroundColor: 'white',
-                        border: errores.contraseña ? '1px solid #dc3545' : '1px solid #ddd'
-                      }}
-                    />
-                    <small style={{ color: '#666', fontSize: '12px' }}>
-                      La contraseña debe contener solo letras y numeros (maximo 20 caracteres, sin espacios)
-                    </small>
-                    {errores.contraseña && (
-                      <span className="error-message">{errores.contraseña}</span>
-                    )}
+                  <div className="form-group full">
+                    {/* 1. Etiqueta separada para que quede arriba */}
+                    <label style={{
+                      display: 'block', // Asegura que ocupe su propia línea
+                      marginBottom: '5px', // Agrega un espacio pequeño debajo de la etiqueta
+                      fontWeight: 'bold' // Opcional: para que se vea como un título de campo
+                    }}>
+                      Contraseña
+                    </label>
+
+                    {/* 2. Nuevo contenedor Flex para alinear solo el Input y el Botón */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <input
+                        type="text"
+                        name="contraseña"
+                        value={formData.contraseña || ''}
+                        readOnly
+                        style={{
+                          flex: '1',
+                          backgroundColor: '#f2f2f2',
+                          cursor: 'not-allowed',
+                          border: errores.contraseña ? '1px solid #dc3545' : '1px solid #ddd',
+                          height: '42px',
+                          paddingLeft: '10px',
+                          fontSize: '16px'
+                        }}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nueva = generarContraseñaAutomatica();
+                          setFormData(prev => ({ ...prev, contraseña: nueva }));
+                        }}
+                        className="btn btn-primary"
+                        style={{
+                          height: '42px',
+                          padding: '0 16px',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        Regenerar
+                      </button>
+                    </div>
                   </div>
+
                 </>
               )}
             </div>

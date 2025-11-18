@@ -1797,6 +1797,10 @@ body {
     }
 
 }
-* {
+fieldset {
     border: none !important;
+}
+
+fieldset legend {
+    display: none;
 }

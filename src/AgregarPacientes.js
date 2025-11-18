@@ -91,16 +91,20 @@ const generarClaveUnica = (nombreCompleto, fechaNacimiento) => {
     return claveBase; // <-- Eliminamos el bucle 'while'
 };
 
-// Función para generar contraseña (Sin cambios)
+
+// Generar contraseña de 6 números
 const generarContraseñaAutomatica = () => {
-    const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    const caracteres = '0123456789';
     let contraseña = '';
     const longitud = 6;
+
     for (let i = 0; i < longitud; i++) {
         contraseña += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
     }
+
     return contraseña;
 };
+
 
 function AgregarPacientes() {
     const [formData, setFormData] = useState({
@@ -328,7 +332,7 @@ function AgregarPacientes() {
                     </div>
 
                     <div className="form-group">
-                        <label>Contraseña *</label>
+                        <label>Contraseña</label>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <input
                                 type="text"
@@ -360,9 +364,6 @@ function AgregarPacientes() {
                                 Regenerar
                             </button>
                         </div>
-                        <small style={{ color: '#666', fontSize: '12px' }}>
-                            Contraseña generada automáticamente (6 caracteres: letras, números y caracteres especiales)
-                        </small>
                     </div>
 
                     <div className="form-group">
