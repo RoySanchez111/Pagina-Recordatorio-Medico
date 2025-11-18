@@ -279,7 +279,11 @@ function AgregarUsuario() {
                     {formData.cedulaNombre && (
                       <p className="file-name">Archivo seleccionado: {formData.cedulaNombre}</p>
                     )}
-                    {/* ... (quitamos el mensaje de error de 'obligatorio') ... */}
+                    {!formData.cedulaNombre && (
+                      <p className="file-name" style={{color: '#ff4444'}}>
+                        * Campo obligatorio para doctores
+                      </p>
+                  )}
                   </div>
 
                   <div className="form-group">
