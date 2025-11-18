@@ -1,47 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import editarAzul from './assets/editar-azul.png';
-import pdfIcon from './assets/pdf-icon.png'; // Necesitarás un icono de PDF
+import pdfIcon from './assets/pdf-icon.png'; 
+
+// <-- AÑADIDO: Tu URL de API
+const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/"; // <-- PEGA TU URL
 
 function EditarUsuario() {
     // --- Estados principales ---
-    const [claveUnica, setClaveUnica] = useState('');
-    const [usuarios, setUsuarios] = useState([]);
+    const [emailSearch, setEmailSearch] = useState(''); // <-- MODIFICADO: Buscamos por email
     const [usuarioData, setUsuarioData] = useState(null);
     const [editableFields, setEditableFields] = useState({});
+    const [loading, setLoading] = useState(false); // <-- AÑADIDO
 
-    // --- Cargar usuarios desde JSON o localStorage ---
-    useEffect(() => {
-        const storedData = localStorage.getItem('usuarios');
-        if (storedData) {
-            setUsuarios(JSON.parse(storedData));
-        } else {
-            fetch('/usuarios.json')
-                .then(res => res.json())
-                .then(data => {
-                    setUsuarios(data);
-                    localStorage.setItem('usuarios', JSON.stringify(data));
-                })
-                .catch(err => console.error('Error al cargar usuarios.json:', err));
-        }
-    }, []);
+    // --- ELIMINADO: Ya no cargamos todos los usuarios al inicio ---
+    // useEffect(() => { ... }, []);
 
-    // --- Buscar usuario por ID ---
-    const handleClaveCheck = (e) => {
+    // --- MODIFICADO: Buscar usuario por Email ---
+    const handleSearch = async (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            const usuarioEncontrado = usuarios.find(u => String(u.id) === claveUnica.trim());
-            if (usuarioEncontrado) {
-                setUsuarioData(usuarioEncontrado);
-                setEditableFields({ ...usuarioEncontrado });
-            } else {
-                alert('Usuario no encontrado.');
+            setLoading(true);
+            setUsuarioData(null);
+            
+            try {
+                const payload = {
+                    action: "getUserByEmail",
+                    data: { email: emailSearch.trim() }
+                };
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.message || 'Error al buscar');
+                }
+                
+                // Encontramos al usuario
+                setUsuarioData(data);
+                // Pre-llenamos los campos editables
+                // Mapeamos 'password_hash' a 'contraseña' para el formulario
+                setEditableFields({ ...data, contraseña: data.password_hash || '' }); 
+
+            } catch (err) {
+                alert(err.message);
                 setUsuarioData(null);
+            } finally {
+                setLoading(false);
             }
         }
     };
 
-    // --- Manejar cambios en inputs ---
+    // --- Manejar cambios en inputs (Sin cambios) ---
     const handleChange = (e) => {
         setEditableFields({
             ...editableFields,
@@ -49,59 +62,101 @@ function EditarUsuario() {
         });
     };
 
-    // --- Cargar nuevo PDF de cédula ---
+    // --- Cargar nuevo PDF de cédula (Sin cambios) ---
     const handleCedulaPDFChange = (e) => {
+        // ... (tu código de PDF no cambia) ...
         const file = e.target.files[0];
         if (!file) return;
-
-        // Verificar que sea un PDF
         if (file.type !== 'application/pdf') {
             alert('Por favor, selecciona un archivo PDF');
-            e.target.value = ''; // Limpiar el input
+            e.target.value = ''; 
             return;
         }
-
         const reader = new FileReader();
         reader.onloadend = () => {
             setEditableFields({
                 ...editableFields,
-                cedulaPDF: reader.result, // Guardamos el PDF en base64
-                cedulaNombre: file.name // Guardamos el nombre del archivo
+                cedulaPDF: reader.result, 
+                cedulaNombre: file.name 
             });
         };
         reader.readAsDataURL(file);
     };
 
-    // --- Guardar cambios en localStorage ---
-    const handleSubmit = (e) => {
+    // --- MODIFICADO: Guardar cambios en la API ---
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        const nuevosUsuarios = usuarios.map(u =>
-            String(u.id) === String(editableFields.id) ? editableFields : u
-        );
-        setUsuarios(nuevosUsuarios);
-        localStorage.setItem('usuarios', JSON.stringify(nuevosUsuarios));
-        alert('Usuario actualizado correctamente ✅');
-    };
+        setLoading(true);
+        
+        try {
+            const payload = {
+                action: "updateUser",
+                data: editableFields // Enviamos el objeto completo
+            };
+            
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Error al actualizar');
+            }
+            
+            // Actualizamos el estado local con los datos guardados
+            setUsuarioData(data.user);
+            setEditableFields(data.user);
+            alert('Usuario actualizado correctamente ✅');
 
-    // --- Eliminar usuario ---
-    const handleEliminar = () => {
-        if (window.confirm('¿Estás seguro de eliminar este usuario?')) {
-            const nuevosUsuarios = usuarios.filter(u => String(u.id) !== String(claveUnica));
-            setUsuarios(nuevosUsuarios);
-            localStorage.setItem('usuarios', JSON.stringify(nuevosUsuarios));
-            alert('Usuario eliminado ❌');
-            handleRecargar();
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
-    // --- Limpiar formulario ---
+    // --- MODIFICADO: Eliminar usuario de la API ---
+    const handleEliminar = async () => {
+        // (Quitamos window.confirm)
+        setLoading(true);
+        
+        try {
+            const payload = {
+                action: "deleteUser",
+                data: { userId: usuarioData.id }
+            };
+            
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Error al eliminar');
+            }
+            
+            alert('Usuario eliminado ❌');
+            handleRecargar(); // Limpiamos el formulario
+
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // --- Limpiar formulario (Sin cambios) ---
     const handleRecargar = () => {
         setUsuarioData(null);
         setEditableFields({});
-        setClaveUnica('');
+        setEmailSearch(''); // Limpiamos el email
     };
 
-    // --- Descargar PDF de cédula ---
+    // --- Descargar PDF de cédula (Sin cambios) ---
     const handleDescargarPDF = () => {
         if (editableFields.cedulaPDF) {
             const link = document.createElement('a');
@@ -132,11 +187,10 @@ function EditarUsuario() {
                             />
                         </div>
 
-                        {/* --- Vista de PDF de cédula --- */}
+                        {/* --- Vista de PDF de cédula (Sin cambios) --- */}
                         <div className="form-group full-width">
                             <label>Cédula Profesional (PDF)</label>
                             
-                            {/* --- Vista previa del PDF --- */}
                             <div className="preview-wrapper">
                                 {editableFields.cedulaPDF ? (
                                     <div className="pdf-preview">
@@ -184,7 +238,7 @@ function EditarUsuario() {
                             <label>Contraseña</label>
                             <input
                                 type="password"
-                                name="contraseña"
+                                name="contraseña" // El campo del form se llama 'contraseña'
                                 value={editableFields.contraseña || ''}
                                 onChange={handleChange}
                             />
@@ -226,7 +280,7 @@ function EditarUsuario() {
                             <label>Contraseña</label>
                             <input
                                 type="password"
-                                name="contraseña"
+                                name="contraseña" // El campo del form se llama 'contraseña'
                                 value={editableFields.contraseña || ''}
                                 onChange={handleChange}
                             />
@@ -234,59 +288,15 @@ function EditarUsuario() {
                     </>
                 );
 
+            // --- ¡ELIMINADO! ---
+            // Este formulario no debe editar pacientes
+            /*
             case 'paciente':
-                return (
-                    <>
-                        <div className="form-group">
-                            <label>Sexo</label>
-                            <input
-                                type="text"
-                                name="sexo"
-                                value={editableFields.sexo || ''}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Teléfono</label>
-                            <input
-                                type="text"
-                                name="telefono"
-                                value={editableFields.telefono || ''}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Dirección</label>
-                            <input
-                                type="text"
-                                name="direccion"
-                                value={editableFields.direccion || ''}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Fecha de nacimiento</label>
-                            <input
-                                type="date"
-                                name="nacimiento"
-                                value={editableFields.nacimiento || ''}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="form-group full-width">
-                            <label>Padecimiento</label>
-                            <input
-                                type="text"
-                                name="padecimiento"
-                                value={editableFields.padecimiento || ''}
-                                onChange={handleChange}
-                            />
-                        </div>
-                    </>
-                );
+                return ( ... );
+            */
 
             default:
-                return <p>Rol desconocido</p>;
+                return <p>Rol desconocido: {rol}</p>;
         }
     };
 
@@ -298,59 +308,67 @@ function EditarUsuario() {
             </h2>
 
             <form className="user-form-card" onSubmit={handleSubmit}>
-                {/* --- Campo de ID para buscar usuario --- */}
-                <div className="form-group full-width">
-                    <label>ID (Presiona Enter para buscar)</label>
-                    <input
-                        type="text"
-                        name="claveUnica"
-                        value={claveUnica}
-                        onChange={(e) => setClaveUnica(e.target.value)}
-                        onKeyDown={handleClaveCheck}
-                        disabled={!!usuarioData}
-                        placeholder="Ej. 1, 2, 3..."
-                    />
-                </div>
-
-                {/* --- Si hay usuario encontrado --- */}
-                {usuarioData && (
-                    <div className="form-grid">
-                        <div className="form-group full-width">
-                            <label>Rol</label>
-                            <input type="text" value={usuarioData.rol} disabled />
-                        </div>
-                        <div className="form-group full-width">
-                            <label>Nombre completo</label>
-                            <input type="text" value={usuarioData.nombreCompleto} disabled />
-                        </div>
-
-                        {/* --- Campos según el rol --- */}
-                        {renderCamposPorRol()}
+                {/* Deshabilitamos todo si está cargando */}
+                <fieldset disabled={loading}>
+                    {/* --- MODIFICADO: Buscar por Email --- */}
+                    <div className="form-group full-width">
+                        <label>Email del Usuario (Presiona Enter para buscar)</label>
+                        <input
+                            type="email"
+                            name="emailSearch"
+                            value={emailSearch}
+                            onChange={(e) => setEmailSearch(e.target.value)}
+                            onKeyDown={handleSearch} // <- Cambiado
+                            disabled={!!usuarioData || loading} // Deshabilitado si ya encontró o si está cargando
+                            placeholder="Ej. doctor@doctor.com"
+                        />
                     </div>
-                )}
 
-                {/* --- Botones de acción --- */}
-                {usuarioData && (
-                    <div className="form-actions">
-                        <button
-                            type="button"
-                            className="btn btn-secondary"
-                            onClick={handleRecargar}
-                        >
-                            Limpiar / Nuevo ID
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-danger"
-                            onClick={handleEliminar}
-                        >
-                            Eliminar Usuario
-                        </button>
-                        <button type="submit" className="btn btn-primary">
-                            Guardar Cambios
-                        </button>
-                    </div>
-                )}
+                    {/* --- Si hay usuario encontrado --- */}
+                    {usuarioData && (
+                        <div className="form-grid">
+                            <div className="form-group full-width">
+                                <label>Rol</label>
+                                <input type="text" value={usuarioData.rol} disabled />
+                            </div>
+                            <div className="form-group full-width">
+                                <label>Nombre completo</label>
+                                <input 
+                                    type="text" 
+                                    name="nombreCompleto" // <-- MODIFICADO: Hacemos el nombre editable
+                                    value={editableFields.nombreCompleto || ''}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            {/* --- Campos según el rol --- */}
+                            {renderCamposPorRol()}
+                        </div>
+                    )}
+
+                    {/* --- Botones de acción --- */}
+                    {usuarioData && (
+                        <div className="form-actions">
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={handleRecargar}
+                            >
+                                Limpiar / Nuevo Email
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-danger"
+                                onClick={handleEliminar}
+                            >
+                                Eliminar Usuario
+                            </button>
+                            <button type="submit" className="btn btn-primary">
+                                {loading ? 'Guardando...' : 'Guardar Cambios'}
+                            </button>
+                        </div>
+                    )}
+                </fieldset>
             </form>
         </div>
     );

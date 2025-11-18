@@ -1,46 +1,60 @@
 import React, { useState } from 'react';
-import './App.css';
+import './App.css'; 
 import { useNavigate } from 'react-router-dom';
-import usuariosData from './usuarios.json'; 
 
-// Generador de contraseñas (añadido aquí mismo)
-const generarPassword = () => {
-    const password = Math.floor(100000 + Math.random() * 900000);
-    return password.toString();
-};
+// Pega tu URL de Lambda aquí
+const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/";
 
 function Login() {
-    const [claveUnica, setClaveUnica] = useState('');
+    const [claveUnica, setClaveUnica] = useState(''); 
     const [contrasena, setContrasena] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false); 
     const navigate = useNavigate();
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
+        setError('');
+        setLoading(true); 
 
-        const storedUsers = JSON.parse(localStorage.getItem('usuarios'));
-        const allUsers = (storedUsers && storedUsers.length > 0) ? storedUsers : usuariosData;
+        // 1. Preparamos el 'body'
+        const payload = {
+            action: "login",
+            data: {
+                correo: claveUnica, 
+                // --- ¡CAMBIO AQUÍ! ---
+                // Dejamos de usar la 'ñ'. Ahora la clave es 'password'.
+                password: contrasena 
+            }
+        };
 
-        const usuarioEncontrado = allUsers.find(
-            (u) => 
-                (u.correo === claveUnica || u.nombreCompleto === claveUnica) && 
-                u.contraseña === contrasena &&
-                (u.rol === 'Administrador' || u.rol === 'Doctor') 
-        );
+        try {
+            // 2. Usamos 'fetch' para llamar a nuestra API de Lambda
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
 
-        if (usuarioEncontrado) {
-            // Guardar todos los datos del usuario en localStorage
-            localStorage.setItem('userId', usuarioEncontrado.id);
-            localStorage.setItem('rol', usuarioEncontrado.rol);
-            localStorage.setItem('nombre', usuarioEncontrado.nombreCompleto);
-            localStorage.setItem('correo', usuarioEncontrado.correo || '');
-            localStorage.setItem('telefono', usuarioEncontrado.telefono || '');
-            localStorage.setItem('sexo', usuarioEncontrado.sexo || '');
-            localStorage.setItem('numeroConsultorio', usuarioEncontrado.numeroConsultorio || '');
-            localStorage.setItem('direccionConsultorio', usuarioEncontrado.direccionConsultorio || '');
-            localStorage.setItem('especialidad', usuarioEncontrado.especialidad || 'Médico');
+            const data = await response.json(); 
 
-            switch (usuarioEncontrado.rol) {
+            // 3. Verificamos si la API nos dio un error
+            if (!response.ok) {
+                throw new Error(data.message || 'Error en el login');
+            }
+
+            // 4. ¡Login Exitoso!
+            const { user } = data; 
+            localStorage.setItem('userId', user.id);
+            localStorage.setItem('rol', user.rol);
+            localStorage.setItem('nombre', user.nombreCompleto);
+            
+            setLoading(false); 
+
+            // 6. Navegamos al dashboard correcto
+            switch (user.rol) {
                 case 'Administrador':
                     navigate('/dashboard/usuarios'); 
                     break;
@@ -50,8 +64,11 @@ function Login() {
                 default:
                     navigate('/login'); 
             }
-        } else {
-            setError('Credenciales incorrectas o rol no autorizado.');
+
+        } catch (err) {
+            // 7. Capturamos cualquier error
+            setLoading(false); 
+            setError(err.message || 'No se pudo conectar al servidor.');
         }
     };
 
@@ -74,6 +91,7 @@ function Login() {
                             id="clave-unica"
                             value={claveUnica}
                             onChange={(e) => setClaveUnica(e.target.value)}
+                            disabled={loading} 
                         />
                     </div>
 
@@ -84,12 +102,15 @@ function Login() {
                             id="contrasena"
                             value={contrasena}
                             onChange={(e) => setContrasena(e.target.value)}
+                            disabled={loading} 
                         />
                     </div>
 
                     {error && <p style={{ color: 'red' }}>{error}</p>}
 
-                    <button type="submit">Ingresar</button>
+                    <button type="submit" disabled={loading}>
+                        {loading ? 'Ingresando...' : 'Ingresar'}
+                    </button>
                 </form>
             </div>
         </div>
@@ -97,4 +118,3 @@ function Login() {
 }
 
 export default Login;
-

@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
+// --- ¡AÑADIDO! ---
+const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/"; // <-- PEGA TU URL
+
 function GestionConsultas() {
     const [consultas, setConsultas] = useState([]);
+    const [isLoading, setIsLoading] = useState(true); // <-- AÑADIDO
+    const [error, setError] = useState(null); // <-- AÑADIDO
+    const [doctorId, setDoctorId] = useState(null); // <-- AÑADIDO
+    
     const [consultaSeleccionada, setConsultaSeleccionada] = useState(null);
     const [mostrarMenu, setMostrarMenu] = useState(false);
     const [mostrarModalReprogramar, setMostrarModalReprogramar] = useState(false);
@@ -11,56 +18,44 @@ function GestionConsultas() {
     const [motivoCancelacion, setMotivoCancelacion] = useState('');
     const [filtroEstado, setFiltroEstado] = useState('todos');
 
-    // Datos de ejemplo mejorados
-    const datosEjemplo = [
-        {
-            id: 1,
-            paciente: "María González",
-            edad: 34,
-            telefono: "+34 612 345 678",
-            doctor: "Dr. Carlos Rodríguez",
-            especialidad: "Neurología",
-            fecha: "2024-03-15T10:00",
-            motivo: "Dolor de cabeza persistente",
-            sintomas: "Mareos, visión borrosa",
-            status: "pendiente",
-            prioridad: "media"
-        },
-        {
-            id: 2,
-            paciente: "Juan Pérez",
-            edad: 45,
-            telefono: "+34 623 456 789",
-            doctor: "Dra. Ana Martínez",
-            especialidad: "Cardiología",
-            fecha: "2024-03-16T14:30",
-            motivo: "Control de presión arterial",
-            sintomas: "Palpitaciones ocasionales",
-            status: "aceptada",
-            prioridad: "alta"
-        },
-        {
-            id: 3,
-            paciente: "Laura Sánchez",
-            edad: 28,
-            telefono: "+34 634 567 890",
-            doctor: "Dr. Carlos Rodríguez",
-            especialidad: "Alergología",
-            fecha: "2024-03-17T09:15",
-            motivo: "Consulta por alergias estacionales",
-            sintomas: "Estornudos, picor ocular",
-            status: "reprogramada",
-            fechaOriginal: "2024-03-10T09:15",
-            prioridad: "baja"
-        }
-    ];
+    // --- ELIMINADOS los datos de ejemplo ---
 
+    // --- MODIFICADO: Carga las consultas desde la API ---
     useEffect(() => {
-        cargarConsultas();
+        const loggedInDoctorId = localStorage.getItem('userId');
+        if (loggedInDoctorId) {
+            setDoctorId(loggedInDoctorId);
+            cargarConsultas(loggedInDoctorId);
+        } else {
+            setError("No se pudo identificar al doctor. Inicie sesión de nuevo.");
+            setIsLoading(false);
+        }
     }, []);
 
-    const cargarConsultas = () => {
-        setConsultas(datosEjemplo);
+    const cargarConsultas = async (docId) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const payload = {
+                action: "getConsultasByDoctor",
+                data: { doctorId: docId }
+            };
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || "No se pudieron cargar las consultas");
+            }
+            const data = await response.json();
+            setConsultas(data);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const abrirMenu = (consulta, event) => {
@@ -74,12 +69,32 @@ function GestionConsultas() {
         setConsultaSeleccionada(null);
     };
 
-    const handleUpdateStatus = (id, newStatus, datosAdicionales = {}) => {
+    // --- MODIFICADO: Llama a la API ---
+    const handleUpdateStatus = async (id, newStatus, datosAdicionales = {}) => {
+        const consultaOriginal = consultas.find(c => c.id === id);
+        // Actualización optimista (actualiza UI primero)
         const actualizadas = consultas.map(c => 
             c.id === id ? { ...c, status: newStatus, ...datosAdicionales } : c
         );
         setConsultas(actualizadas);
         cerrarMenu();
+
+        try {
+            const payload = {
+                action: "updateConsultaStatus",
+                data: { consultaId: id, newStatus: newStatus }
+            };
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            // Si tiene éxito, no hacemos nada (ya está en la UI)
+        } catch (err) {
+            // Si falla, revertimos el cambio
+            alert("Error al actualizar el estado. Revirtiendo.");
+            setConsultas(consultas.map(c => c.id === id ? consultaOriginal : c));
+        }
     };
 
     const abrirModalReprogramar = () => {
@@ -104,32 +119,79 @@ function GestionConsultas() {
         setMotivoCancelacion('');
     };
 
-    const handleReprogramar = () => {
+    // --- MODIFICADO: Llama a la API ---
+    const handleReprogramar = async () => {
         if (!nuevaFecha) {
             alert('Por favor, selecciona una nueva fecha');
             return;
         }
 
-        handleUpdateStatus(consultaSeleccionada.id, 'reprogramada', {
-            fecha: nuevaFecha,
-            fechaOriginal: consultaSeleccionada.fechaOriginal || consultaSeleccionada.fecha
-        });
+        const id = consultaSeleccionada.id;
+        const fechaOriginal = consultaSeleccionada.fechaOriginal || consultaSeleccionada.fecha;
+
+        // Actualización optimista
+        const actualizadas = consultas.map(c => 
+            c.id === id ? { ...c, status: 'reprogramada', fecha: nuevaFecha, fechaOriginal: fechaOriginal } : c
+        );
+        setConsultas(actualizadas);
         cerrarModalReprogramar();
+
+        try {
+            const payload = {
+                action: "reprogramarConsulta",
+                data: {
+                    consultaId: id,
+                    nuevaFecha: nuevaFecha,
+                    fechaOriginal: fechaOriginal
+                }
+            };
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch (err) {
+            alert("Error al reprogramar. Revirtiendo.");
+            setConsultas(consultas.map(c => c.id === id ? consultaSeleccionada : c));
+        }
     };
 
-    const handleCancelar = () => {
+    // --- MODIFICADO: Llama a la API ---
+    const handleCancelar = async () => {
         if (!motivoCancelacion.trim()) {
             alert('Por favor, especifica el motivo de la cancelación');
             return;
         }
 
-        handleUpdateStatus(consultaSeleccionada.id, 'cancelada', {
-            motivoCancelacion: motivoCancelacion,
-            fechaCancelacion: new Date().toISOString()
-        });
+        const id = consultaSeleccionada.id;
+
+        // Actualización optimista
+        const actualizadas = consultas.map(c => 
+            c.id === id ? { ...c, status: 'cancelada', motivoCancelacion: motivoCancelacion, fechaCancelacion: new Date().toISOString() } : c
+        );
+        setConsultas(actualizadas);
         cerrarModalCancelar();
+
+        try {
+            const payload = {
+                action: "cancelarConsulta",
+                data: {
+                    consultaId: id,
+                    motivoCancelacion: motivoCancelacion
+                }
+            };
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch (err) {
+            alert("Error al cancelar. Revirtiendo.");
+            setConsultas(consultas.map(c => c.id === id ? consultaSeleccionada : c));
+        }
     };
 
+    // --- Funciones de ayuda (sin cambios) ---
     const getStatusClass = (status) => {
         switch(status) {
             case 'aceptada': return 'status-aceptada';
@@ -139,7 +201,6 @@ function GestionConsultas() {
             default: return 'status-pendiente';
         }
     };
-
     const getStatusText = (status) => {
         switch(status) {
             case 'aceptada': return 'Aceptada';
@@ -149,7 +210,6 @@ function GestionConsultas() {
             default: return 'Pendiente';
         }
     };
-
     const getPrioridadClass = (prioridad) => {
         switch(prioridad) {
             case 'alta': return 'prioridad-alta';
@@ -157,7 +217,6 @@ function GestionConsultas() {
             default: return 'prioridad-baja';
         }
     };
-
     const getPrioridadText = (prioridad) => {
         switch(prioridad) {
             case 'alta': return 'Alta';
@@ -171,20 +230,19 @@ function GestionConsultas() {
         return consulta.status === filtroEstado;
     });
 
-    // Cerrar menú al hacer clic fuera
     useEffect(() => {
         const handleClickOutside = () => {
             if (mostrarMenu) {
                 cerrarMenu();
             }
         };
-
         document.addEventListener('click', handleClickOutside);
         return () => {
             document.removeEventListener('click', handleClickOutside);
         };
     }, [mostrarMenu]);
 
+    // --- MODIFICADO: Ahora calcula desde el estado 'consultas' ---
     const stats = {
         total: consultas.length,
         pendientes: consultas.filter(c => c.status === 'pendiente').length,
@@ -193,9 +251,34 @@ function GestionConsultas() {
         canceladas: consultas.filter(c => c.status === 'cancelada').length
     };
 
+    // --- ESTADOS DE CARGA Y ERROR ---
+    if (isLoading) {
+        return (
+            <div className="gestion-consultas-container">
+                <div className="header-section">
+                    <h1 className="page-title">Gestión de Consultas Médicas</h1>
+                </div>
+                <p style={{ textAlign: 'center', padding: '40px' }}>Cargando consultas...</p>
+            </div>
+        );
+    }
+    
+    if (error) {
+        return (
+            <div className="gestion-consultas-container">
+                <div className="header-section">
+                    <h1 className="page-title">Gestión de Consultas Médicas</h1>
+                </div>
+                <p style={{ textAlign: 'center', padding: '40px', color: 'red' }}>
+                    Error al cargar: {error}
+                </p>
+            </div>
+        );
+    }
+
     return (
         <div className="gestion-consultas-container">
-            {/* Header */}
+            {/* Header (sin cambios) */}
             <div className="header-section">
                 <h1 className="page-title">Gestión de Consultas Médicas</h1>
                 <p className="page-subtitle">Administra y organiza las consultas de tus pacientes</p>
@@ -203,7 +286,7 @@ function GestionConsultas() {
 
             {/* Contenedor Principal */}
             <div className="main-content-container">
-                {/* Estadísticas */}
+                {/* Estadísticas (sin cambios) */}
                 <div className="stats-section">
                     <div className="section-title">Resumen de Consultas</div>
                     <div className="stats-container">
@@ -234,7 +317,7 @@ function GestionConsultas() {
                     </div>
                 </div>
 
-                {/* Filtros */}
+                {/* Filtros (sin cambios) */}
                 <div className="filters-section">
                     <div className="section-title">Filtros</div>
                     <div className="filters-container">
@@ -255,7 +338,7 @@ function GestionConsultas() {
                     </div>
                 </div>
 
-                {/* Lista de consultas */}
+                {/* Lista de consultas (sin cambios, leerá de 'consultasFiltradas') */}
                 <div className="consultas-section">
                     <div className="section-title">Lista de Consultas</div>
                     <div className="consultas-grid">
@@ -270,7 +353,8 @@ function GestionConsultas() {
                                 <div key={consulta.id} className="consulta-card">
                                     <div className="card-header">
                                         <div className="paciente-main-info">
-                                            <h3 className="paciente-nombre">{consulta.paciente}</h3>
+                                            {/* --- MODIFICADO: Leemos 'pacienteNombre' de la API --- */}
+                                            <h3 className="paciente-nombre">{consulta.pacienteNombre}</h3>
                                             <div className="paciente-details">
                                                 <span className="edad">{consulta.edad} años</span>
                                                 <span className="separator">•</span>
@@ -294,7 +378,8 @@ function GestionConsultas() {
                                         <div className="info-grid">
                                             <div className="info-row">
                                                 <span className="info-label">Doctor:</span>
-                                                <span className="info-value">{consulta.doctor}</span>
+                                                {/* --- MODIFICADO: Leemos 'doctorNombre' de la API --- */}
+                                                <span className="info-value">{consulta.doctorNombre}</span>
                                             </div>
                                             <div className="info-row">
                                                 <span className="info-label">Especialidad:</span>
@@ -355,14 +440,13 @@ function GestionConsultas() {
                                         </div>
                                     </div>
 
-                                    {/* Menú desplegable */}
+                                    {/* Menú desplegable (sin cambios) */}
                                     {mostrarMenu && consultaSeleccionada && consultaSeleccionada.id === consulta.id && (
                                         <div className="menu-desplegable">
                                             <div className="menu-header">
-                                                <span>Opciones para {consultaSeleccionada.paciente}</span>
+                                                <span>Opciones para {consultaSeleccionada.pacienteNombre}</span>
                                             </div>
                                             <div className="menu-contenido">
-                                                {/* Opciones disponibles para todos los estados */}
                                                 {consultaSeleccionada.status !== 'aceptada' && (
                                                     <button 
                                                         className="menu-item aceptar"
@@ -371,7 +455,6 @@ function GestionConsultas() {
                                                         Aceptar Consulta
                                                     </button>
                                                 )}
-                                                
                                                 {consultaSeleccionada.status !== 'reprogramada' && (
                                                     <button 
                                                         className="menu-item reprogramar"
@@ -380,7 +463,6 @@ function GestionConsultas() {
                                                         Reprogramar Consulta
                                                     </button>
                                                 )}
-
                                                 {consultaSeleccionada.status !== 'pendiente' && (
                                                     <button 
                                                         className="menu-item pendiente"
@@ -389,7 +471,6 @@ function GestionConsultas() {
                                                         Volver a Pendiente
                                                     </button>
                                                 )}
-
                                                 {consultaSeleccionada.status !== 'cancelada' && (
                                                     <button 
                                                         className="menu-item cancelar"
@@ -398,7 +479,6 @@ function GestionConsultas() {
                                                         Cancelar Consulta
                                                     </button>
                                                 )}
-
                                                 {consultaSeleccionada.status === 'cancelada' && (
                                                     <button 
                                                         className="menu-item reactivar"
@@ -407,7 +487,6 @@ function GestionConsultas() {
                                                         Reactivar Consulta
                                                     </button>
                                                 )}
-
                                                 <div className="menu-divider"></div>
                                                 <button 
                                                     className="menu-item cerrar"
@@ -425,7 +504,7 @@ function GestionConsultas() {
                 </div>
             </div>
 
-            {/* Modal para reprogramar */}
+            {/* Modal para reprogramar (sin cambios) */}
             {mostrarModalReprogramar && (
                 <div className="modal-overlay" onClick={cerrarModalReprogramar}>
                     <div className="modal-container" onClick={(e) => e.stopPropagation()}>
@@ -433,10 +512,9 @@ function GestionConsultas() {
                             <div className="modal-header">
                                 <h2>Reprogramar Consulta</h2>
                             </div>
-                            
                             <div className="modal-body">
                                 <div className="info-field">
-                                    <strong>Paciente:</strong> {consultaSeleccionada?.paciente}
+                                    <strong>Paciente:</strong> {consultaSeleccionada?.pacienteNombre}
                                 </div>
                                 <div className="info-field">
                                     <strong>Fecha actual:</strong> {consultaSeleccionada && 
@@ -450,7 +528,6 @@ function GestionConsultas() {
                                         })
                                     }
                                 </div>
-                                
                                 <div className="form-field">
                                     <label>Nueva fecha y hora:</label>
                                     <input 
@@ -463,7 +540,6 @@ function GestionConsultas() {
                                     />
                                 </div>
                             </div>
-                            
                             <div className="modal-actions">
                                 <button 
                                     className="btn btn-primary"
@@ -483,7 +559,7 @@ function GestionConsultas() {
                 </div>
             )}
 
-            {/* Modal para cancelar */}
+            {/* Modal para cancelar (sin cambios) */}
             {mostrarModalCancelar && (
                 <div className="modal-overlay" onClick={cerrarModalCancelar}>
                     <div className="modal-container" onClick={(e) => e.stopPropagation()}>
@@ -491,10 +567,9 @@ function GestionConsultas() {
                             <div className="modal-header">
                                 <h2>Cancelar Consulta</h2>
                             </div>
-                            
                             <div className="modal-body">
                                 <div className="info-field">
-                                    <strong>Paciente:</strong> {consultaSeleccionada?.paciente}
+                                    <strong>Paciente:</strong> {consultaSeleccionada?.pacienteNombre}
                                 </div>
                                 <div className="info-field">
                                     <strong>Fecha de la consulta:</strong> {consultaSeleccionada && 
@@ -508,7 +583,6 @@ function GestionConsultas() {
                                         })
                                     }
                                 </div>
-                                
                                 <div className="form-field">
                                     <label>Motivo de la cancelación:</label>
                                     <textarea 
@@ -521,7 +595,6 @@ function GestionConsultas() {
                                     />
                                 </div>
                             </div>
-                            
                             <div className="modal-actions">
                                 <button 
                                     className="btn btn-danger"
