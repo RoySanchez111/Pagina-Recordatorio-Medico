@@ -1,3 +1,29 @@
+/* --- Variables y Base Styles (Añadidas para centralizar colores) --- */
+:root {
+    --primary-color: #6a8dff; /* Color principal (Dashboard/Sidebar/Botones) */
+    --primary-hover: #587efc;
+    --danger-color: #d90429; /* Rojo para acciones peligrosas (Eliminar) */
+    --background-color: #f4f7fc; /* Fondo del Dashboard */
+    --card-background: #ffffff;
+    --text-color: #333;
+    --secondary-text: #555;
+    --border-color: #ddd;
+}
+
+* {
+    /* Mantiene box-sizing y elimina bordes globales indeseados */
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--background-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+}
+
+
 /* 1. ESTILOS GLOBALES Y LOGIN
 ----------------------------------- */
 
@@ -13,6 +39,8 @@
     display: flex;
     width: 100%;
     height: 100vh; 
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
 }
 
 .login-aside {
@@ -271,6 +299,13 @@
     border-bottom: 2px solid #ddd;
     padding-bottom: 15px;
 }
+.usuarios-container {
+    width: 100%;
+    padding: 30px;
+    background-color: var(--card-background);
+    border-radius: 12px; /* Ligeramente más redondeado que la tabla (8px) */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Sombra suave para destacar */
+}
 
 .page-title img {
     width: 32px;
@@ -347,6 +382,48 @@ tbody tr td {
 tbody tr:hover {
     background-color: #f9f9f9;
 }
+
+
+/* Botón Eliminar en la tabla */
+.btn-eliminar {
+    background-color: var(--danger-color); 
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px; 
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-eliminar:hover {
+    background-color: #b30021; /* Darker danger color */
+    transform: translateY(-1px);
+}
+
+/* --- Mensajes de Estado (Consistentes con la paleta de colores) --- */
+.status-message {
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.status-message.success {
+    background-color: #e6ffed; /* Light green-blue */
+    color: #0d832d;
+    border: 1px solid #c8e6c9;
+}
+
+.status-message.error {
+    background-color: #ffeaea; /* Light red-pink */
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
 
 
 /* 5. FORMULARIOS (GLOBAL)
@@ -699,6 +776,13 @@ tbody tr:hover {
     text-align: center;
 }
 
+.modal-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+
 .modal-header h3 {
     margin: 0;
     font-size: 1.4rem;
@@ -719,6 +803,76 @@ tbody tr:hover {
     padding-top: 15px;
     border-top: 1px solid #eee;
 }
+
+
+/* Resaltado de elementos de advertencia */
+.user-name-highlight {
+    color: var(--danger-color); 
+    font-weight: 700;
+    background-color: #fff3f5; 
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.user-id-highlight {
+    font-size: 0.9em;
+    background-color: #f0f0f0; 
+    color: #6c757d;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-family: monospace;
+}
+
+.warning-text {
+    color: #777;
+    font-style: italic;
+    margin-top: 15px;
+    font-size: 0.95em;
+    border-left: 3px solid var(--danger-color); /* Advertencia en rojo */
+    padding-left: 10px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    padding: 15px 25px;
+    border-top: 1px solid #eee; 
+    background-color: #f8f9fa;
+}
+
+/* Botones del modal (usando la clase btn-secondary y btn-danger) */
+.modal-cancel-btn {
+    /* Estilo secundario para cancelar */
+    background-color: #f0f0f0;
+    color: var(--secondary-text);
+    padding: 10px 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.modal-cancel-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.modal-confirm-btn {
+    /* Estilo peligroso para confirmar */
+    background-color: var(--danger-color);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s, transform 0.1s;
+}
+.modal-confirm-btn:hover {
+    background-color: #b30021; /* Darker danger color */
+    transform: translateY(-1px);
+}
+
 
 /* 8. ACCESIBILIDAD
 ----------------------------------- */
@@ -1641,12 +1795,7 @@ body {
     .login-logo {
         max-width: 90px;
     }
-    .form-usuario-container,
-.user-form-card {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
+
 }
 * {
     border: none !important;

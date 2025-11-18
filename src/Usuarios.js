@@ -1,38 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import usuariosAzul from './assets/usuarios-azul.png';
-// import usuariosData from './usuarios.json'; // <-- ELIMINADO
 
 // <-- AÑADIDO: Tu URL de API
-const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/"; // <-- PEGA TU URL
+const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/";
 
 function Usuarios() {
     const [usuarios, setUsuarios] = useState([]);
     const [filtro, setFiltro] = useState('Todos');
-    const [isLoading, setIsLoading] = useState(true); // <-- AÑADIDO
-    const [error, setError] = useState(null); // <-- AÑADIDO
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // <-- MODIFICADO: Cargar usuarios desde la API
+    // --- ESTADOS PARA EL MODAL ---
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [usuarioAEliminar, setUsuarioAEliminar] = useState(null);
+    const [deleteStatus, setDeleteStatus] = useState(null); // 'success' o 'error'
+
+    // Cargar usuarios desde la API
     useEffect(() => {
         const fetchUsuarios = async () => {
             setIsLoading(true);
             setError(null);
+            setDeleteStatus(null);
+
             try {
                 const payload = {
                     action: "getAllUsers",
-                    data: {} // No necesitamos enviar datos, pero la API espera el 'action'
+                    data: {}
                 };
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+
                 if (!response.ok) {
                     const data = await response.json();
                     throw new Error(data.message || "No se pudieron cargar los usuarios");
                 }
+
                 const data = await response.json();
                 setUsuarios(data);
+
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -41,15 +50,32 @@ function Usuarios() {
         };
 
         fetchUsuarios();
-    }, []); // Se ejecuta una vez al cargar
+    }, []);
 
-    // --- ¡NUEVA FUNCIÓN! ---
-    // Llama a la API para eliminar un usuario
-    const handleEliminarUsuario = async (userId) => {
-        // (Quitamos window.confirm por simplicidad)
-        
-        // Actualización optimista: lo quitamos de la UI primero
+    // Abrir modal
+    const handleOpenModal = (user) => {
+        setError(null);
+        setUsuarioAEliminar(user);
+        setIsModalOpen(true);
+    };
+
+    // Cerrar modal
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setUsuarioAEliminar(null);
+        setDeleteStatus(null);
+    };
+
+    // Confirmar eliminación
+    const handleConfirmarEliminar = async () => {
+        if (!usuarioAEliminar || !usuarioAEliminar.id) return;
+
+        const userId = usuarioAEliminar.id;
         const usuariosOriginales = [...usuarios];
+
+        handleCloseModal();
+
+        // Optimista
         setUsuarios(prevUsuarios => prevUsuarios.filter(u => u.id !== userId));
 
         try {
@@ -57,30 +83,33 @@ function Usuarios() {
                 action: "deleteUser",
                 data: { userId: userId }
             };
+
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+
             if (!response.ok) {
                 const data = await response.json();
                 throw new Error(data.message || "Error al eliminar");
             }
-            // Si tiene éxito, no hacemos nada (ya se quitó de la UI)
+
+            setDeleteStatus('success');
 
         } catch (err) {
-            alert(`Error al eliminar: ${err.message}`);
-            // Si falla, revertimos el cambio en la UI
             setUsuarios(usuariosOriginales);
+            setError(`Error al eliminar: ${err.message}`);
+            setDeleteStatus('error');
         }
     };
 
-    // 🎯 Filtrar usuarios (lógica sin cambios)
+    // Filtrar usuarios
     const usuariosFiltrados = usuarios.filter(u =>
         filtro === 'Todos' ? true : u.rol.toLowerCase() === filtro.toLowerCase()
     );
 
-    // --- ESTADOS DE CARGA Y ERROR ---
+    // ESTADOS UI
     if (isLoading) {
         return (
             <div className="usuarios-container">
@@ -88,21 +117,19 @@ function Usuarios() {
                     <img src={usuariosAzul} alt="Usuarios" />
                     Usuarios
                 </h2>
-                <p style={{ textAlign: 'center', padding: '20px' }}>Cargando usuarios...</p>
+                <p className="loading-message">Cargando usuarios...</p>
             </div>
         );
     }
 
-    if (error) {
+    if (error && deleteStatus !== 'error') {
         return (
             <div className="usuarios-container">
                 <h2 className="page-title">
                     <img src={usuariosAzul} alt="Usuarios" />
                     Usuarios
                 </h2>
-                <p style={{ textAlign: 'center', padding: '20px', color: 'red' }}>
-                    Error al cargar: {error}
-                </p>
+                <p className="error-message">Error al cargar: {error}</p>
             </div>
         );
     }
@@ -114,9 +141,20 @@ function Usuarios() {
                 Usuarios
             </h2>
 
-            {/* --- Botones de Filtro (MODIFICADO) --- */}
+            {/* Mensaje de eliminación */}
+            {deleteStatus === 'success' && (
+                <div className="status-message success">
+                    ¡Usuario eliminado con éxito!
+                </div>
+            )}
+            {deleteStatus === 'error' && (
+                <div className="status-message error">
+                    {error}
+                </div>
+            )}
+
+            {/* Filtros */}
             <div className="filter-buttons">
-                {/* Quitamos el filtro 'Paciente' */}
                 {['Todos', 'Doctor', 'Administrador'].map(tipo => (
                     <button
                         key={tipo}
@@ -128,8 +166,7 @@ function Usuarios() {
                 ))}
             </div>
 
-
-            {/* --- Tabla de Usuarios (MODIFICADA) --- */}
+            {/* Tabla */}
             <div className="table-container">
                 <table>
                     <thead>
@@ -138,7 +175,7 @@ function Usuarios() {
                             <th>Nombre Completo</th>
                             <th>Rol</th>
                             <th>Correo</th>
-                            <th>Acciones</th> {/* <-- AÑADIDO */}
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -149,10 +186,9 @@ function Usuarios() {
                                 <td>{user.rol}</td>
                                 <td>{user.correo}</td>
                                 <td>
-                                    {/* <-- AÑADIDO: Botón de eliminar --> */}
                                     <button
-                                        className="btn-eliminar" // (Asegúrate de tener este estilo en App.css)
-                                        onClick={() => handleEliminarUsuario(user.id)}
+                                        className="btn-eliminar"
+                                        onClick={() => handleOpenModal(user)}
                                     >
                                         Eliminar
                                     </button>
@@ -162,6 +198,38 @@ function Usuarios() {
                     </tbody>
                 </table>
             </div>
+
+            {/* Modal */}
+            {isModalOpen && usuarioAEliminar && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h3 className="modal-title">Confirmar Eliminación</h3>
+                        </div>
+                        <div className="modal-body">
+                            <p>
+                                ¿Está seguro de que desea eliminar al usuario
+                                <strong className="user-name-highlight">
+                                    {` ${usuarioAEliminar.nombreCompleto} `}
+                                </strong>
+                                con ID
+                                <code className="user-id-highlight">
+                                    {` ${usuarioAEliminar.id} `}
+                                </code>?
+                            </p>
+                            <p className="warning-text">Esta acción es irreversible.</p>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="modal-cancel-btn" onClick={handleCloseModal}>
+                                Cancelar
+                            </button>
+                            <button className="modal-confirm-btn" onClick={handleConfirmarEliminar}>
+                                Sí, Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

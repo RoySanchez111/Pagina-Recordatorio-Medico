@@ -1,23 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import editarAzul from './assets/editar-azul.png'; 
+import editarAzul from './assets/editar-azul.png';
 
-// <-- AÑADIDO: Tu URL de API
-const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/"; // <-- PEGA TU URL
+const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/";
 
 function VerRecetas() {
     const [recetas, setRecetas] = useState([]);
-    const [isLoading, setIsLoading] = useState(true); // <-- AÑADIDO
-    const [error, setError] = useState(null); // <-- AÑADIDO
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // <-- MODIFICADO: Ahora carga desde la API de AWS
+    // --- NUEVO: Estados del modal ---
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [recetaAEliminar, setRecetaAEliminar] = useState(null);
+
+    // Cargar recetas desde la API
     useEffect(() => {
         const fetchRecetas = async () => {
             try {
                 const loggedInDoctorId = localStorage.getItem('userId');
-                if (!loggedInDoctorId) {
-                    throw new Error("No se pudo identificar al doctor.");
-                }
+                if (!loggedInDoctorId) throw new Error("No se pudo identificar al doctor.");
 
                 const payload = {
                     action: "getRecipesByDoctor",
@@ -46,11 +47,26 @@ function VerRecetas() {
         };
 
         fetchRecetas();
-    }, []); // Se ejecuta una vez
+    }, []);
 
-    // <-- MODIFICADO: Ahora llama a la API para eliminar
-    const handleEliminarReceta = async (idReceta) => {
-        // (Quitamos window.confirm)
+    // --- ABRIR MODAL ---
+    const handleOpenModal = (receta) => {
+        setRecetaAEliminar(receta);
+        setIsModalOpen(true);
+    };
+
+    // --- CERRAR MODAL ---
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setRecetaAEliminar(null);
+    };
+
+    // --- CONFIRMAR ELIMINACIÓN ---
+    const handleConfirmarEliminar = async () => {
+        if (!recetaAEliminar) return;
+
+        const idReceta = recetaAEliminar.id;
+
         try {
             const payload = {
                 action: "deleteRecipe",
@@ -65,18 +81,20 @@ function VerRecetas() {
 
             if (!response.ok) {
                 const data = await response.json();
-                throw new Error(data.message || "Error al eliminar");
+                throw new Error(data.message || "Error al eliminar la receta.");
             }
 
-            // Si se elimina de la API, la quitamos del estado local
-            setRecetas(prevRecetas => prevRecetas.filter(r => r.id !== idReceta));
+            // Eliminar del estado local
+            setRecetas(prev => prev.filter(r => r.id !== idReceta));
 
         } catch (err) {
             alert(`Error al eliminar: ${err.message}`);
         }
+
+        handleCloseModal();
     };
 
-    // --- MANEJO DE ESTADOS DE CARGA Y ERROR ---
+    // --- UI Estados ---
     if (isLoading) {
         return (
             <div className="form-usuario-container">
@@ -102,7 +120,7 @@ function VerRecetas() {
             </div>
         );
     }
-    
+
     return (
         <div className="form-usuario-container">
             <h2 className="page-title">
@@ -111,12 +129,10 @@ function VerRecetas() {
             </h2>
 
             <div className="lista-items-container">
-                
                 {recetas.length === 0 && (
                     <p style={{ textAlign: 'center' }}>No has emitido ninguna receta.</p>
                 )}
 
-                {/* --- MODIFICADO: 'fechaEmision' y 'nombre_medicamento' --- */}
                 {[...recetas].reverse().map(receta => (
                     <div key={receta.id} className="item-card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -125,25 +141,30 @@ function VerRecetas() {
                                 <p><strong>Fecha:</strong> {receta.fechaEmision}</p>
                                 <p><strong>Diagnóstico:</strong> {receta.diagnostico}</p>
                             </div>
-                            <button 
-                                className="btn btn-danger" 
+
+                            <button
+                                className="btn btn-danger"
                                 style={{ padding: '8px 12px', fontSize: '0.9rem' }}
-                                onClick={() => handleEliminarReceta(receta.id)}
+                                onClick={() => handleOpenModal(receta)}
                             >
                                 Eliminar
                             </button>
                         </div>
-                        
+
                         <hr style={{ borderColor: '#eee', margin: '15px 0' }} />
 
                         <h5>Medicamentos Recetados:</h5>
                         <div className="medicamentos-list" style={{ maxHeight: 'none' }}>
-                            {receta.medicamentos.map((med) => (
+                            {receta.medicamentos.map(med => (
                                 <div key={med.id} className="medicamento-item">
                                     <div className="medicamento-info">
                                         <strong>{med.nombre_medicamento}</strong>
                                         <p>{med.dosis} • {med.frecuencia}h • {med.duracion}</p>
-                                        {med.instrucciones && <p style={{ color: '#555', fontSize: '0.85rem' }}><em>Inst: {med.instrucciones}</em></p>}
+                                        {med.instrucciones && (
+                                            <p style={{ color: '#555', fontSize: '0.85rem' }}>
+                                                <em>Inst: {med.instrucciones}</em>
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -151,6 +172,37 @@ function VerRecetas() {
                     </div>
                 ))}
             </div>
+
+            {/* --- MODAL DE CONFIRMACIÓN --- */}
+            {isModalOpen && recetaAEliminar && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h3 className="modal-title">Confirmar Eliminación</h3>
+                        </div>
+
+                        <div className="modal-body">
+                            <p>
+                                ¿Está seguro de que desea eliminar la receta de
+                                <strong className="user-name-highlight"> {recetaAEliminar.pacienteNombre} </strong>
+                                (ID receta:
+                                <code className="user-id-highlight"> {recetaAEliminar.id}</code>)?
+                            </p>
+                            <p className="warning-text">Esta acción es irreversible.</p>
+                        </div>
+
+                        <div className="modal-footer">
+                            <button className="modal-cancel-btn" onClick={handleCloseModal}>
+                                Cancelar
+                            </button>
+                            <button className="modal-confirm-btn" onClick={handleConfirmarEliminar}>
+                                Sí, Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }
