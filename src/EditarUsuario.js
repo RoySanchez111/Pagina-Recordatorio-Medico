@@ -3,20 +3,16 @@ import './App.css';
 import editarAzul from './assets/editar-azul.png';
 import pdfIcon from './assets/pdf-icon.png'; 
 
-// <-- AÑADIDO: Tu URL de API
-const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/"; // <-- PEGA TU URL
+const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/"; 
 
 function EditarUsuario() {
     // --- Estados principales ---
-    const [emailSearch, setEmailSearch] = useState(''); // <-- MODIFICADO: Buscamos por email
+    const [emailSearch, setEmailSearch] = useState(''); 
     const [usuarioData, setUsuarioData] = useState(null);
     const [editableFields, setEditableFields] = useState({});
-    const [loading, setLoading] = useState(false); // <-- AÑADIDO
+    const [loading, setLoading] = useState(false); 
 
-    // --- ELIMINADO: Ya no cargamos todos los usuarios al inicio ---
-    // useEffect(() => { ... }, []);
 
-    // --- MODIFICADO: Buscar usuario por Email ---
     const handleSearch = async (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
