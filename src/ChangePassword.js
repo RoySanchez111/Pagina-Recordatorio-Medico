@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 // import './App.css'; 
 
-// Tu URL de API
 const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/"; 
 
 function ChangePassword() {
@@ -13,6 +12,20 @@ function ChangePassword() {
     const [tipoMensaje, setTipoMensaje] = useState(''); 
     const [loading, setLoading] = useState(false); 
     const navigate = useNavigate();
+
+    // Función auxiliar para redirigir según el rol (sin importar mayúsculas/minúsculas)
+    const redirigirUsuario = () => {
+        const rol = localStorage.getItem('rol');
+        const rolNormalizado = rol ? rol.toLowerCase().trim() : '';
+
+        if (rolNormalizado === 'doctor') {
+            navigate('/doctor/ver-pacientes');
+        } else if (rolNormalizado === 'administrador') {
+            navigate('/dashboard/usuarios');
+        } else {
+            navigate('/login');
+        }
+    };
 
     const handleChangePassword = async (event) => {
         event.preventDefault();
@@ -43,8 +56,7 @@ function ChangePassword() {
 
         // Recuperar ID
         const userId = localStorage.getItem('userId');
-        console.log("Intentando cambiar password para ID:", userId); // <-- DEBUG
-
+        
         if (!userId) {
             setMensaje('Sesión no válida. Por favor, cierra sesión y vuelve a entrar.');
             setTipoMensaje('error');
@@ -72,7 +84,6 @@ function ChangePassword() {
             const data = await response.json();
 
             if (!response.ok) {
-                // Muestra el error exacto que viene de la API
                 throw new Error(data.message || 'Error al cambiar la contraseña');
             }
 
@@ -83,11 +94,9 @@ function ChangePassword() {
             setNuevaContraseña('');
             setConfirmarContraseña('');
 
+            // Redirigir después de 2 segundos
             setTimeout(() => {
-                const rol = localStorage.getItem('rol');
-                if (rol === 'Doctor') navigate('/doctor/ver-pacientes');
-                else if (rol === 'Administrador') navigate('/dashboard/usuarios');
-                else navigate('/login');
+                redirigirUsuario();
             }, 2000);
 
         } catch (err) {
@@ -100,10 +109,7 @@ function ChangePassword() {
     };
 
     const handleCancel = () => {
-        const rol = localStorage.getItem('rol');
-        if (rol === 'Doctor') navigate('/doctor/ver-pacientes');
-        else if (rol === 'Administrador') navigate('/dashboard/usuarios');
-        else navigate('/login');
+        redirigirUsuario();
     };
 
     return (
@@ -173,4 +179,3 @@ function ChangePassword() {
 }
 
 export default ChangePassword;
-

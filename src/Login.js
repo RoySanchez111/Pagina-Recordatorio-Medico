@@ -3,11 +3,9 @@ import './App.css';
 import { useNavigate } from 'react-router-dom';
 import heartbeatLogo from './assets/heartbeat_logo.png';
 
-// ⚠️ PEGA AQUÍ LA URL DE TU LAMBDA (Misma que en AgregarUsuario)
 const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/";
 
 function Login() {
-    // Nota: Aunque la variable se llame claveUnica, aquí capturamos el Correo para Doctores/Admin
     const [correoInput, setCorreoInput] = useState(''); 
     const [contrasena, setContrasena] = useState('');
     const [error, setError] = useState('');
@@ -20,14 +18,13 @@ function Login() {
         setCargando(true);
 
         try {
-            // 1. Petición a la API
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: 'login',
                     data: {
-                        correo: correoInput, // Enviamos como correo para buscar en tabla Usuarios
+                        correo: correoInput,
                         password: contrasena
                     }
                 })
@@ -37,33 +34,38 @@ function Login() {
 
             if (response.ok) {
                 const usuario = result.user;
+                
+                // --- CORRECCIÓN CRÍTICA PARA EVITAR REBOTE ---
+                // Tu App.js probablemente espera "Doctor" con mayúscula.
+                // Si la BD devuelve "doctor", forzamos la mayúscula aquí.
+                let rolFormateado = usuario.rol;
+                if (usuario.rol.toLowerCase() === 'doctor') {
+                    rolFormateado = 'Doctor';
+                } else if (usuario.rol.toLowerCase() === 'administrador') {
+                    rolFormateado = 'Administrador';
+                }
 
-                // 2. Guardar sesión en LocalStorage con datos REALES de la BD
+                // Guardamos el rol formateado (Ej: "Doctor")
                 localStorage.setItem('userId', usuario.id);
-                localStorage.setItem('rol', usuario.rol);
+                localStorage.setItem('rol', rolFormateado); 
                 localStorage.setItem('nombre', usuario.nombreCompleto);
                 
-                // Datos opcionales que la API podría o no devolver (evita nulls)
                 localStorage.setItem('correo', usuario.correo || '');
                 localStorage.setItem('telefono', usuario.telefono || '');
                 localStorage.setItem('direccionConsultorio', usuario.direccion || '');
                 localStorage.setItem('especialidad', usuario.especialidad || 'Médico General');
 
-                // 3. Redirección según Rol
-                switch (usuario.rol) {
-                    case 'Administrador':
-                        navigate('/dashboard/usuarios'); 
-                        break;
-                    case 'Doctor':
-                        navigate('/doctor/ver-pacientes');
-                        break;
-                    default:
-                        // Si por alguna razón un paciente intenta entrar por aquí (y la lógica lo permite)
-                        setError('Este portal es solo para personal médico.');
-                        localStorage.clear(); // Limpiar sesión por seguridad
+                // Redirección usando el rol formateado
+                if (rolFormateado === 'Administrador') {
+                    navigate('/dashboard/usuarios');
+                } else if (rolFormateado === 'Doctor') {
+                    navigate('/doctor/ver-pacientes');
+                } else {
+                    setError('Rol no autorizado: ' + usuario.rol);
+                    localStorage.clear();
                 }
+
             } else {
-                // Error 401 o 404 desde la Lambda
                 setError(result.message || 'Credenciales incorrectas.');
             }
 
@@ -98,7 +100,6 @@ function Login() {
                             id="correo-input"
                             value={correoInput}
                             onChange={(e) => setCorreoInput(e.target.value)}
-                            placeholder="ejemplo@hospital.com"
                             required
                             disabled={cargando}
                         />

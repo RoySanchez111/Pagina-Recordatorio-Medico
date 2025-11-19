@@ -3,10 +3,21 @@ import './App.css';
 import agregarAzul from './assets/agregar-azul.png';
 import defaultAvatar from './assets/default-profile-image.png';
 
-
+// ASEGÚRATE DE QUE ESTA URL SEA LA DE TU NUEVA LAMBDA LIMPIA
 const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/";
 
-// Validaciones integradas (Mantenemos tu lógica original)
+// --- Generador de Contraseña Alfanumérica (Letras y Números) ---
+const generarContraseñaAutomatica = () => {
+  const caracteres = '1234567890';
+  let contraseña = '';
+  const longitud = 10; // Longitud segura de 10 caracteres
+  for (let i = 0; i < longitud; i++) {
+    contraseña += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  }
+  return contraseña;
+};
+
+// --- Validaciones ---
 const validarUsuario = (usuarioData, rol) => {
   const errores = {};
 
@@ -28,13 +39,9 @@ const validarUsuario = (usuarioData, rol) => {
     }
   }
 
+  // Validación de contraseña (ahora es generada, pero mantenemos la validación por seguridad)
   if (!usuarioData.contraseña) {
     errores.contraseña = 'La contraseña es requerida';
-  } else {
-    const regexPassword = /^[A-Za-z0-9]{1,20}$/;
-    if (!regexPassword.test(usuarioData.contraseña)) {
-      errores.contraseña = 'La contraseña debe contener solo letras y numeros (maximo 20 caracteres, sin espacios)';
-    }
   }
 
   if (rol === 'doctor') {
@@ -61,7 +68,7 @@ function AgregarUsuario() {
   const [mostrarCampos, setMostrarCampos] = useState(false);
   const [formData, setFormData] = useState({});
   const [errores, setErrores] = useState({});
-  const [cargando, setCargando] = useState(false); // Nuevo estado para feedback visual
+  const [cargando, setCargando] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -78,9 +85,8 @@ function AgregarUsuario() {
       valorLimpio = value.replace(/\D/g, '').slice(0, 10);
     } else if (name === 'especialidad') {
       valorLimpio = value.replace(/[^A-Za-zÁáÉéÍíÓóÚúÑñ\s]/g, '');
-    } else if (name === 'contraseña') {
-      valorLimpio = value.replace(/[^A-Za-z0-9]/g, '').slice(0, 20);
-    }
+    } 
+    // Ya no necesitamos limpiar la contraseña manualmente porque es readOnly
 
     setFormData({ ...formData, [name]: valorLimpio });
   };
@@ -94,24 +100,28 @@ function AgregarUsuario() {
         return;
       }
       
-      // ⚠️ CAMBIO CRÍTICO: DynamoDB solo acepta items < 400KB
-      // Bajamos el límite a 300KB para dejar espacio a los datos de texto.
-      if (file.size > 300 * 1024) { 
-        alert('El archivo es demasiado grande para la base de datos. Máximo 300KB permitido.');
+      if (file.size > 250 * 1024) { 
+        alert('El archivo es demasiado grande. Máximo 250KB permitido para asegurar el guardado.');
         e.target.value = '';
         return;
       }
       
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData({ 
-          ...formData, 
-          cedulaPDF: reader.result, // Base64 string
+        setFormData(prev => ({ 
+          ...prev, 
+          cedulaPDF: reader.result, 
           cedulaNombre: file.name
-        });
+        }));
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // Función para regenerar la contraseña
+  const regenerarContraseña = () => {
+    const nuevaPass = generarContraseñaAutomatica();
+    setFormData(prev => ({ ...prev, contraseña: nuevaPass }));
   };
 
   const handleRolChange = (e) => {
@@ -119,6 +129,13 @@ function AgregarUsuario() {
     setRol(valor);
     setMostrarCampos(!!valor);
     setErrores({});
+    
+    // Al cambiar de rol, limpiamos el formulario pero generamos una contraseña nueva inmediatamente
+    if (valor) {
+      setFormData({ contraseña: generarContraseñaAutomatica() });
+    } else {
+      setFormData({});
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -140,18 +157,15 @@ function AgregarUsuario() {
     setCargando(true);
 
     try {
-      // 1. Preparamos los datos para la API
       const datosParaEnviar = {
         ...formData,
         rol: rol,
-        password: formData.contraseña, // Mapeamos contraseña a password para la API
+        password: formData.contraseña, 
         avatar: defaultAvatar
       };
 
-      // Eliminamos la propiedad 'contraseña' redundante (la API usa 'password')
       delete datosParaEnviar.contraseña;
 
-      // 2. Llamada a la API (Action: createUser)
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -164,12 +178,12 @@ function AgregarUsuario() {
       const result = await response.json();
 
       if (response.ok) {
-        alert(`Usuario agregado con éxito en la Nube\nID: ${result.user.id}\nContraseña: ${formData.contraseña}`);
+        // Muestra la contraseña generada en el alert para que el admin la copie si es necesario
+        alert(`Usuario agregado con éxito.\n\nCredenciales para entregar:\nCorreo: ${formData.correo}\nContraseña: ${formData.contraseña}`);
         
-        // Limpiar formulario
-        setFormData({});
         setRol('');
         setMostrarCampos(false);
+        setFormData({});
         setErrores({});
       } else {
         throw new Error(result.message || "Error al crear usuario");
@@ -193,7 +207,7 @@ function AgregarUsuario() {
       <form className="user-form-card" onSubmit={handleSubmit}>
         <div className="rol-card">
           <label htmlFor="rol" className="rol-label">
-            ¿Que es?
+            ¿Qué es?
           </label>
           <select
             id="rol"
@@ -203,7 +217,7 @@ function AgregarUsuario() {
             onChange={handleRolChange}
             disabled={cargando}
           >
-            <option value="">Selecciona una opcion</option>
+            <option value="">Selecciona una opción</option>
             <option value="doctor">Doctor</option>
             <option value="administrador">Administrador</option>
           </select>
@@ -224,9 +238,7 @@ function AgregarUsuario() {
                     placeholder="Solo letras y espacios"
                     disabled={cargando}
                   />
-                  {errores.nombreCompleto && (
-                    <span className="error-message">{errores.nombreCompleto}</span>
-                  )}
+                  {errores.nombreCompleto && <span className="error-message">{errores.nombreCompleto}</span>}
                 </div>
                 
                 <div className="form-group full-width">
@@ -240,13 +252,11 @@ function AgregarUsuario() {
                     className={errores.correo ? 'input-error' : ''}
                     disabled={cargando}
                   />
-                  {errores.correo && (
-                    <span className="error-message">{errores.correo}</span>
-                  )}
+                  {errores.correo && <span className="error-message">{errores.correo}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label>Cedula profesional (PDF) *</label>
+                  <label>Cédula profesional (PDF) *</label>
                   <input
                     type="file"
                     name="cedula"
@@ -257,12 +267,10 @@ function AgregarUsuario() {
                     disabled={cargando}
                   />
                   {formData.cedulaNombre && (
-                    <p className="file-name">Archivo seleccionado: {formData.cedulaNombre}</p>
+                    <p className="file-name">Archivo: {formData.cedulaNombre}</p>
                   )}
                   {!formData.cedulaNombre && (
-                    <p className="file-name" style={{color: '#ff4444'}}>
-                      * Max 300KB
-                    </p>
+                    <p className="file-name" style={{color: '#ff4444'}}>* Max 250KB</p>
                   )}
                 </div>
 
@@ -273,55 +281,66 @@ function AgregarUsuario() {
                     value={formData.especialidad || ''}
                     onChange={handleChange}
                     className={errores.especialidad ? 'input-error' : ''}
-                    placeholder="Ej. Cardiologia"
+                    placeholder="Ej. Cardiología"
                     disabled={cargando}
                   />
-                  {errores.especialidad && (
-                    <span className="error-message">{errores.especialidad}</span>
-                  )}
+                  {errores.especialidad && <span className="error-message">{errores.especialidad}</span>}
                 </div>
                 
                 <div className="form-group">
-                  <label>Telefono de consultorio</label>
+                  <label>Teléfono de consultorio</label>
                   <input 
                     name="telefono" 
                     value={formData.telefono || ''}
                     onChange={handleChange}
                     className={errores.telefono ? 'input-error' : ''}
-                    placeholder="10 digitos"
+                    placeholder="10 dígitos"
                     disabled={cargando}
                   />
-                  {errores.telefono && (
-                    <span className="error-message">{errores.telefono}</span>
-                  )}
+                  {errores.telefono && <span className="error-message">{errores.telefono}</span>}
                 </div>
                 
                 <div className="form-group full">
-                  <label>Contraseña *</label>
-                  <input 
-                    type="text" 
-                    name="contraseña" 
-                    value={formData.contraseña || ''}
-                    onChange={handleChange}
-                    placeholder="Letras y numeros (max 20 caracteres, sin espacios)"
-                    required
-                    disabled={cargando}
-                    style={{ 
-                      width: '100%',
-                      backgroundColor: 'white',
-                      border: errores.contraseña ? '1px solid #dc3545' : '1px solid #ddd'
-                    }}
-                  />
-                  <small style={{ color: '#666', fontSize: '12px' }}>
-                    La contraseña debe contener solo letras y numeros (maximo 20 caracteres, sin espacios)
+                  <label>Contraseña (Auto-generada) *</label>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <input 
+                        type="text" 
+                        name="contraseña" 
+                        value={formData.contraseña || ''}
+                        readOnly
+                        disabled={cargando}
+                        style={{ 
+                            flex: 1,
+                            backgroundColor: '#f5f5f5',
+                            border: errores.contraseña ? '1px solid #dc3545' : '1px solid #ddd',
+                            color: '#333',
+                            cursor: 'default'
+                        }}
+                    />
+                    <button 
+                        type="button"
+                        onClick={regenerarContraseña}
+                        disabled={cargando}
+                        style={{
+                            padding: '0 15px',
+                            backgroundColor: '#6c757d',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '13px'
+                        }}
+                    >
+                        Regenerar
+                    </button>
+                  </div>
+                  <small style={{ color: '#666', fontSize: '12px', marginTop: '5px', display: 'block' }}>
+                    Copie esta contraseña para entregarla al usuario.
                   </small>
-                  {errores.contraseña && (
-                    <span className="error-message">{errores.contraseña}</span>
-                  )}
                 </div>
                 
                 <div className="form-group full-width">
-                  <label>Direccion de consultorio</label>
+                  <label>Dirección de consultorio</label>
                   <input 
                     name="direccion" 
                     value={formData.direccion || ''}
@@ -329,9 +348,7 @@ function AgregarUsuario() {
                     className={errores.direccion ? 'input-error' : ''}
                     disabled={cargando}
                   />
-                  {errores.direccion && (
-                    <span className="error-message">{errores.direccion}</span>
-                  )}
+                  {errores.direccion && <span className="error-message">{errores.direccion}</span>}
                 </div>
               </>
             )}
@@ -349,9 +366,7 @@ function AgregarUsuario() {
                     className={errores.correo ? 'input-error' : ''}
                     disabled={cargando}
                   />
-                  {errores.correo && (
-                    <span className="error-message">{errores.correo}</span>
-                  )}
+                  {errores.correo && <span className="error-message">{errores.correo}</span>}
                 </div>
                 
                 <div className="form-group full-width">
@@ -365,33 +380,46 @@ function AgregarUsuario() {
                     placeholder="Solo letras y espacios"
                     disabled={cargando}
                   />
-                  {errores.nombreCompleto && (
-                    <span className="error-message">{errores.nombreCompleto}</span>
-                  )}
+                  {errores.nombreCompleto && <span className="error-message">{errores.nombreCompleto}</span>}
                 </div>
                 
                 <div className="form-group full-width">
-                  <label>Contraseña *</label>
-                  <input 
-                    type="text" 
-                    name="contraseña" 
-                    value={formData.contraseña || ''}
-                    onChange={handleChange}
-                    placeholder="Letras y numeros (max 20 caracteres, sin espacios)"
-                    required
-                    disabled={cargando}
-                    style={{ 
-                      width: '100%',
-                      backgroundColor: 'white',
-                      border: errores.contraseña ? '1px solid #dc3545' : '1px solid #ddd'
-                    }}
-                  />
-                  <small style={{ color: '#666', fontSize: '12px' }}>
-                    La contraseña debe contener solo letras y numeros (maximo 20 caracteres, sin espacios)
+                  <label>Contraseña (Auto-generada) *</label>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <input 
+                        type="text" 
+                        name="contraseña" 
+                        value={formData.contraseña || ''}
+                        readOnly
+                        disabled={cargando}
+                        style={{ 
+                            flex: 1,
+                            backgroundColor: '#f5f5f5',
+                            border: errores.contraseña ? '1px solid #dc3545' : '1px solid #ddd',
+                            color: '#333',
+                            cursor: 'default'
+                        }}
+                    />
+                    <button 
+                        type="button"
+                        onClick={regenerarContraseña}
+                        disabled={cargando}
+                        style={{
+                            padding: '0 15px',
+                            backgroundColor: '#6c757d',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '13px'
+                        }}
+                    >
+                        Regenerar
+                    </button>
+                  </div>
+                  <small style={{ color: '#666', fontSize: '12px', marginTop: '5px', display: 'block' }}>
+                    Copie esta contraseña para entregarla al usuario.
                   </small>
-                  {errores.contraseña && (
-                    <span className="error-message">{errores.contraseña}</span>
-                  )}
                 </div>
               </>
             )}
