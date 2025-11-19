@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+// import './App.css'; // Asegúrate de tener tus estilos importados
+
+// Tu URL de API (La que ya tienes configurada)
+const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/";
 
 function ChangePassword() {
     const [contraseñaActual, setContraseñaActual] = useState('');
@@ -7,26 +11,43 @@ function ChangePassword() {
     const [confirmarContraseña, setConfirmarContraseña] = useState('');
     const [mensaje, setMensaje] = useState('');
     const [tipoMensaje, setTipoMensaje] = useState(''); // 'error' o 'success'
+    const [loading, setLoading] = useState(false); // Estado de carga para bloquear el botón
     const navigate = useNavigate();
 
-    const handleChangePassword = (event) => {
+    const handleChangePassword = async (event) => {
         event.preventDefault();
 
         // Limpiar mensajes anteriores
         setMensaje('');
         setTipoMensaje('');
 
-        // Validar campos vacíos
+        // 1. Validaciones locales
         if (!contraseñaActual || !nuevaContraseña || !confirmarContraseña) {
             setMensaje('Por favor, completa todos los campos');
             setTipoMensaje('error');
             return;
         }
 
-        // Obtener usuario actual del localStorage
+        if (contraseñaActual === nuevaContraseña) {
+            setMensaje('La nueva contraseña no puede ser igual a la actual');
+            setTipoMensaje('error');
+            return;
+        }
+
+        if (nuevaContraseña.length < 6) {
+            setMensaje('La contraseña debe tener al menos 6 caracteres');
+            setTipoMensaje('error');
+            return;
+        }
+
+        if (nuevaContraseña !== confirmarContraseña) {
+            setMensaje('Las nuevas contraseñas no coinciden');
+            setTipoMensaje('error');
+            return;
+        }
+
+        // 2. Obtener usuario actual (Solo necesitamos el ID)
         const userId = localStorage.getItem('userId');
-        const userEmail = localStorage.getItem('correo');
-        const userName = localStorage.getItem('nombre');
 
         if (!userId) {
             setMensaje('No se encontró información del usuario. Por favor, inicie sesión nuevamente.');
@@ -34,68 +55,33 @@ function ChangePassword() {
             return;
         }
 
-        // Verificar contraseña actual
-        const storedUsers = JSON.parse(localStorage.getItem('usuarios')) || [];
-        const currentUser = storedUsers.find(user => 
-            user.id === userId || user.correo === userEmail || user.nombreCompleto === userName
-        );
+        // 3. Llamar a la API
+        setLoading(true);
+        
+        try {
+            const payload = {
+                action: "changePassword",
+                data: {
+                    userId: userId,
+                    currentPassword: contraseñaActual,
+                    newPassword: nuevaContraseña
+                }
+            };
 
-        if (!currentUser) {
-            setMensaje('No se pudo encontrar el usuario');
-            setTipoMensaje('error');
-            return;
-        }
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
-        // Validar contraseña actual
-        if (currentUser.contraseña !== contraseñaActual) {
-            setMensaje('La contraseña actual es incorrecta');
-            setTipoMensaje('error');
-            return;
-        }
+            const data = await response.json();
 
-        // Validar que la nueva contraseña no sea igual a la actual
-        if (contraseñaActual === nuevaContraseña) {
-            setMensaje('La nueva contraseña no puede ser igual a la actual');
-            setTipoMensaje('error');
-            return;
-        }
-
-        // Validar longitud mínima
-        if (nuevaContraseña.length < 6) {
-            setMensaje('La contraseña debe tener al menos 6 caracteres');
-            setTipoMensaje('error');
-            return;
-        }
-
-        // Validar que las contraseñas coincidan
-        if (nuevaContraseña !== confirmarContraseña) {
-            setMensaje('Las nuevas contraseñas no coinciden');
-            setTipoMensaje('error');
-            return;
-        }
-
-        // Actualizar contraseña en el almacenamiento
-        const userIndex = storedUsers.findIndex(user => 
-            user.id === userId || user.correo === userEmail || user.nombreCompleto === userName
-        );
-
-        if (userIndex !== -1) {
-            // Actualizar contraseña
-            storedUsers[userIndex].contraseña = nuevaContraseña;
-            
-            // Guardar cambios
-            localStorage.setItem('usuarios', JSON.stringify(storedUsers));
-            
-            // También actualizar en usuariosData si existe
-            const usuariosData = JSON.parse(localStorage.getItem('usuariosData')) || [];
-            const dataIndex = usuariosData.findIndex(user => 
-                user.id === userId || user.correo === userEmail || user.nombreCompleto === userName
-            );
-            if (dataIndex !== -1) {
-                usuariosData[dataIndex].contraseña = nuevaContraseña;
-                localStorage.setItem('usuariosData', JSON.stringify(usuariosData));
+            if (!response.ok) {
+                // Si la API dice que la contraseña actual está mal, o usuario no encontrado
+                throw new Error(data.message || 'Error al cambiar la contraseña');
             }
 
+            // --- ÉXITO ---
             setMensaje('¡Contraseña cambiada exitosamente!');
             setTipoMensaje('success');
             
@@ -111,12 +97,16 @@ function ChangePassword() {
                     navigate('/doctor/ver-pacientes');
                 } else if (rol === 'Administrador') {
                     navigate('/dashboard/usuarios');
+                } else {
+                    navigate('/login');
                 }
             }, 2000);
 
-        } else {
-            setMensaje('No se pudo encontrar el usuario para actualizar la contraseña');
+        } catch (err) {
+            setMensaje(err.message);
             setTipoMensaje('error');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -126,6 +116,8 @@ function ChangePassword() {
             navigate('/doctor/ver-pacientes');
         } else if (rol === 'Administrador') {
             navigate('/dashboard/usuarios');
+        } else {
+            navigate('/login');
         }
     };
 
@@ -135,56 +127,67 @@ function ChangePassword() {
                 <h2>CAMBIAR CONTRASEÑA</h2>
                 
                 <form onSubmit={handleChangePassword}>
-                    <div className="form-group">
-                        <label htmlFor="contraseñaActual">Contraseña actual</label>
-                        <input
-                            type="password"
-                            id="contraseñaActual"
-                            value={contraseñaActual}
-                            onChange={(e) => setContraseñaActual(e.target.value)}
-                            placeholder="Ingresa tu contraseña actual"
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="nuevaContraseña">Nueva contraseña</label>
-                        <input
-                            type="password"
-                            id="nuevaContraseña"
-                            value={nuevaContraseña}
-                            onChange={(e) => setNuevaContraseña(e.target.value)}
-                            placeholder="Ingresa nueva contraseña"
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="confirmarContraseña">Confirmar nueva contraseña</label>
-                        <input
-                            type="password"
-                            id="confirmarContraseña"
-                            value={confirmarContraseña}
-                            onChange={(e) => setConfirmarContraseña(e.target.value)}
-                            placeholder="Confirma la nueva contraseña"
-                            required
-                        />
-                    </div>
-
-                    {mensaje && (
-                        <div className={`mensaje ${tipoMensaje}`}>
-                            {mensaje}
+                    {/* Usamos fieldset para deshabilitar todo el formulario mientras carga */}
+                    <fieldset disabled={loading} style={{border: 'none', padding: 0, margin: 0}}>
+                        <div className="form-group">
+                            <label htmlFor="contraseñaActual">Contraseña actual</label>
+                            <input
+                                type="password"
+                                id="contraseñaActual"
+                                value={contraseñaActual}
+                                onChange={(e) => setContraseñaActual(e.target.value)}
+                                placeholder="Ingresa tu contraseña actual"
+                                required
+                            />
                         </div>
-                    )}
 
-                    <div className="button-group">
-                        <button type="submit" className="btn-primary">
-                            Cambiar contraseña
-                        </button>
-                        <button type="button" className="btn-secondary" onClick={handleCancel}>
-                            Cancelar
-                        </button>
-                    </div>
+                        <div className="form-group">
+                            <label htmlFor="nuevaContraseña">Nueva contraseña</label>
+                            <input
+                                type="password"
+                                id="nuevaContraseña"
+                                value={nuevaContraseña}
+                                onChange={(e) => setNuevaContraseña(e.target.value)}
+                                placeholder="Ingresa nueva contraseña"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="confirmarContraseña">Confirmar nueva contraseña</label>
+                            <input
+                                type="password"
+                                id="confirmarContraseña"
+                                value={confirmarContraseña}
+                                onChange={(e) => setConfirmarContraseña(e.target.value)}
+                                placeholder="Confirma la nueva contraseña"
+                                required
+                            />
+                        </div>
+
+                        {mensaje && (
+                            <div className={`mensaje ${tipoMensaje}`} style={{ 
+                                padding: '10px', 
+                                marginBottom: '15px', 
+                                borderRadius: '4px',
+                                backgroundColor: tipoMensaje === 'error' ? '#ffebee' : '#e8f5e9',
+                                color: tipoMensaje === 'error' ? '#c62828' : '#2e7d32',
+                                textAlign: 'center',
+                                border: `1px solid ${tipoMensaje === 'error' ? '#ffcdd2' : '#c8e6c9'}`
+                            }}>
+                                {mensaje}
+                            </div>
+                        )}
+
+                        <div className="button-group">
+                            <button type="submit" className="btn-primary" disabled={loading}>
+                                {loading ? 'Guardando...' : 'Cambiar contraseña'}
+                            </button>
+                            <button type="button" className="btn-secondary" onClick={handleCancel} disabled={loading}>
+                                Cancelar
+                            </button>
+                        </div>
+                    </fieldset>
                 </form>
             </div>
         </div>
