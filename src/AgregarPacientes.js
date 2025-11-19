@@ -81,18 +81,30 @@ const validarPaciente = (pacienteData) => {
 
 
 
-const generarClaveUnica = (nombreCompleto, fechaNacimiento) => {
-    if (!nombreCompleto || !fechaNacimiento) return '';
-    const partesNombre = nombreCompleto.trim().split(' ');
-    const primeraLetraNombre = partesNombre[0] ? partesNombre[0].charAt(0).toUpperCase() : '';
-    const primeraLetraPaterno = partesNombre[1] ? partesNombre[1].charAt(0).toUpperCase() : '';
-    const primeraLetraMaterno = partesNombre[2] ? partesNombre[2].charAt(0).toUpperCase() : '';
-    const añoNacimiento = new Date(fechaNacimiento).getFullYear();
-    
-    // Generar clave base
-    let claveBase = primeraLetraNombre + primeraLetraPaterno + primeraLetraMaterno + añoNacimiento;
-    return claveBase; // <-- Eliminamos el bucle 'while'
-};
+function generarCorreo(nombreCompleto) {
+  // 1. Limpiar espacios extra y dividir el nombre en partes
+  const partesNombre = nombreCompleto.trim().split(/\s+/);
+  
+  // Definir el dominio
+  const dominio = "@healthreminder.com";
+  
+  // Verificar que haya al menos un nombre y un apellido
+  if (partesNombre.length < 2) {
+    // Manejar el caso donde solo hay una o ninguna palabra
+    console.error("Nombre incompleto. Se necesitan al menos Nombre y Apellido.");
+    return ""; // Devuelve una cadena vacía o un valor predeterminado si el nombre es muy corto
+  }
+  
+  // 2. Tomar el primer nombre y el segundo elemento (el primer apellido)
+  const primerNombre = partesNombre[0];
+  const primerApellido = partesNombre[1];
+  
+  // 3. Unir las partes en el formato deseado: lowercase, con punto y el dominio
+  const correo = `${primerNombre}.${primerApellido}${dominio}`;
+  
+  // 4. Convertir todo a minúsculas (es estándar para correos)
+  return correo.toLowerCase();
+}
 
 
 // Generar contraseña de 6 números
@@ -157,7 +169,7 @@ function AgregarPacientes() {
         if (name === 'nombreCompleto' || name === 'nacimiento') {
             if (nuevosDatos.nombreCompleto && nuevosDatos.nacimiento) {
                 // Ya no pasamos 'usuariosExistentes'
-                const claveGenerada = generarClaveUnica(
+                const claveGenerada = generarCorreo(
                     nuevosDatos.nombreCompleto, 
                     nuevosDatos.nacimiento
                 );
