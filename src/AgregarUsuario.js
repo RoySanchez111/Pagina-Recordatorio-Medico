@@ -76,10 +76,6 @@ function AgregarUsuario() {
     
     if (errores[name]) {
       setErrores(prev => ({ ...prev, [name]: '' }));
-      if (name === 'contraseña') {
-    return; // bloquea escritura completamente
-  }
-
     }
 
     let valorLimpio = value;
