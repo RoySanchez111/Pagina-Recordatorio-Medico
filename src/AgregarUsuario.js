@@ -3,8 +3,8 @@ import './App.css';
 import agregarAzul from './assets/agregar-azul.png';
 import defaultAvatar from './assets/default-profile-image.png';
 
-// ⚠️ IMPORTANTE: PEGA AQUÍ TU URL DE LA LAMBDA (Function URL)
-const API_URL = "https://TU_URL_DE_LAMBDA_AQUI.lambda-url.us-east-1.on.aws/";
+
+const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/";
 
 // Validaciones integradas (Mantenemos tu lógica original)
 const validarUsuario = (usuarioData, rol) => {
