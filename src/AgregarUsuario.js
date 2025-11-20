@@ -3,7 +3,7 @@ import './App.css';
 import agregarAzul from './assets/agregar-azul.png';
 import defaultAvatar from './assets/default-profile-image.png';
 
-// ASEGÚRATE DE QUE ESTA URL SEA LA DE TU NUEVA LAMBDA LIMPIA
+// TU URL DE LAMBDA
 const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/";
 
 // --- Generador de Contraseña Alfanumérica (Letras y Números) ---
@@ -22,11 +22,11 @@ const validarUsuario = (usuarioData, rol) => {
   const errores = {};
 
   if (!usuarioData.correo) {
-    errores.correo = 'El correo electronico es requerido';
+    errores.correo = 'El correo electrónico es requerido';
   } else {
     const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!regexEmail.test(usuarioData.correo)) {
-      errores.correo = 'El formato del email no es valido';
+      errores.correo = 'El formato del email no es válido';
     }
   }
 
@@ -35,11 +35,10 @@ const validarUsuario = (usuarioData, rol) => {
   } else {
     const regexNombre = /^[A-Za-zÁáÉéÍíÓóÚúÑñ\s]{2,50}$/;
     if (!regexNombre.test(usuarioData.nombreCompleto.trim())) {
-      errores.nombreCompleto = 'El nombre debe contener solo letras y espacios (2-50 caracteres)';
+      errores.nombreCompleto = 'El nombre debe contener solo letras y espacios';
     }
   }
 
-  // Validación de contraseña (ahora es generada, pero mantenemos la validación por seguridad)
   if (!usuarioData.contraseña) {
     errores.contraseña = 'La contraseña es requerida';
   }
@@ -48,12 +47,12 @@ const validarUsuario = (usuarioData, rol) => {
     if (usuarioData.telefono && usuarioData.telefono.trim() !== '') {
       const regexTelefono = /^[0-9]{10}$/;
       if (!regexTelefono.test(usuarioData.telefono)) {
-        errores.telefono = 'El telefono debe tener exactamente 10 digitos';
+        errores.telefono = 'El teléfono debe tener exactamente 10 dígitos';
       }
     }
 
     if (usuarioData.direccion && usuarioData.direccion.length > 200) {
-      errores.direccion = 'La direccion no puede exceder 200 caracteres';
+      errores.direccion = 'La dirección no puede exceder 200 caracteres';
     }
   }
 
@@ -86,7 +85,6 @@ function AgregarUsuario() {
     } else if (name === 'especialidad') {
       valorLimpio = value.replace(/[^A-Za-zÁáÉéÍíÓóÚúÑñ\s]/g, '');
     } 
-    // Ya no necesitamos limpiar la contraseña manualmente porque es readOnly
 
     setFormData({ ...formData, [name]: valorLimpio });
   };
@@ -100,8 +98,9 @@ function AgregarUsuario() {
         return;
       }
       
-      if (file.size > 250 * 1024) { 
-        alert('El archivo es demasiado grande. Máximo 250KB permitido para asegurar el guardado.');
+      // --- CAMBIO IMPORTANTE PARA S3: LÍMITE AUMENTADO A 5MB ---
+      if (file.size > 5 * 1024 * 1024) { 
+        alert('El archivo es demasiado grande. Máximo 5MB permitido.');
         e.target.value = '';
         return;
       }
@@ -118,7 +117,6 @@ function AgregarUsuario() {
     }
   };
 
-  // Función para regenerar la contraseña
   const regenerarContraseña = () => {
     const nuevaPass = generarContraseñaAutomatica();
     setFormData(prev => ({ ...prev, contraseña: nuevaPass }));
@@ -130,7 +128,6 @@ function AgregarUsuario() {
     setMostrarCampos(!!valor);
     setErrores({});
     
-    // Al cambiar de rol, limpiamos el formulario pero generamos una contraseña nueva inmediatamente
     if (valor) {
       setFormData({ contraseña: generarContraseñaAutomatica() });
     } else {
@@ -150,7 +147,7 @@ function AgregarUsuario() {
     }
 
     if (rol === 'doctor' && !formData.cedulaPDF) {
-      alert('Para registrar un doctor, es necesario subir la cedula profesional en formato PDF');
+      alert('Para registrar un doctor, es necesario subir la cédula profesional en formato PDF');
       return;
     }
 
@@ -164,6 +161,7 @@ function AgregarUsuario() {
         avatar: defaultAvatar
       };
 
+      // Eliminamos la propiedad duplicada
       delete datosParaEnviar.contraseña;
 
       const response = await fetch(API_URL, {
@@ -178,7 +176,6 @@ function AgregarUsuario() {
       const result = await response.json();
 
       if (response.ok) {
-        // Muestra la contraseña generada en el alert para que el admin la copie si es necesario
         alert(`Usuario agregado con éxito.\n\nCredenciales para entregar:\nCorreo: ${formData.correo}\nContraseña: ${formData.contraseña}`);
         
         setRol('');
@@ -269,8 +266,9 @@ function AgregarUsuario() {
                   {formData.cedulaNombre && (
                     <p className="file-name">Archivo: {formData.cedulaNombre}</p>
                   )}
+                  {/* AVISO DE TAMAÑO MÁXIMO ACTUALIZADO */}
                   {!formData.cedulaNombre && (
-                    <p className="file-name" style={{color: '#ff4444'}}>* Max 250KB</p>
+                    <p className="file-name" style={{color: '#4caf50'}}>* Max 5MB</p>
                   )}
                 </div>
 
