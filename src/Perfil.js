@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Importamos para redirigir
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Perfil = () => {
     const navigate = useNavigate(); // Hook de navegación
+    const [profileImage, setProfileImage] = useState(null); // foto de perfil (base64)
+    const [rol, setRol] = useState('');                     // rol del usuario
+
     
     // Estado solo para mostrar datos (sin lógica de contraseñas aquí)
     const [doctorData, setDoctorData] = useState({
@@ -15,27 +18,58 @@ const Perfil = () => {
     });
 
     useEffect(() => {
-        // 1. Cargar datos seguros desde localStorage (los que guardamos en Login)
-        const nombreCompleto = localStorage.getItem('nombre') || '';
-        const sexo = localStorage.getItem('sexo') || 'Masculino';
-        const numeroConsultorio = localStorage.getItem('numeroConsultorio') || 'No especificado';
-        const direccionConsultorio = localStorage.getItem('direccionConsultorio') || 'No especificada';
-        const especialidad = localStorage.getItem('especialidad') || 'Médico';
-        
-        // Separar nombre y apellidos visualmente
-        const nombresArray = nombreCompleto.split(' ');
-        const nombre = nombresArray[0] || '';
-        const apellidos = nombresArray.slice(1).join(' ') || '';
+    // 1. Cargar datos seguros desde localStorage
+    const nombreCompleto = localStorage.getItem('nombre') || '';
+    const sexo = localStorage.getItem('sexo') || 'Masculino';
+    const numeroConsultorio = localStorage.getItem('numeroConsultorio') || 'No especificado';
+    const direccionConsultorio = localStorage.getItem('direccionConsultorio') || 'No especificada';
+    const especialidad = localStorage.getItem('especialidad') || 'Médico';
 
-        setDoctorData({
-            nombre: nombre || 'Doctor',
-            apellidos: apellidos || '',
-            sexo: sexo,
-            numeroConsultorio: numeroConsultorio,
-            direccionConsultorio: direccionConsultorio,
-            especialidad: especialidad
-        });
-    }, []);
+    const rolGuardado = localStorage.getItem('rol') || '';
+    const imagenGuardada = localStorage.getItem('fotoPerfil');
+
+    // Separar nombre y apellidos visualmente
+    const nombresArray = nombreCompleto.split(' ');
+    const nombre = nombresArray[0] || '';
+    const apellidos = nombresArray.slice(1).join(' ') || '';
+
+    setDoctorData({
+        nombre: nombre || 'Doctor',
+        apellidos: apellidos || '',
+        sexo: sexo,
+        numeroConsultorio: numeroConsultorio,
+        direccionConsultorio: direccionConsultorio,
+        especialidad: especialidad
+    });
+
+    setRol(rolGuardado);
+    if (imagenGuardada) {
+        setProfileImage(imagenGuardada);
+    }
+}, []);
+
+    const fileInputRef = useRef(null);
+
+    const handleChangePhotoClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click(); // abre el selector de archivos
+        }
+    };
+
+    const handleImageChange = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64String = reader.result;
+            setProfileImage(base64String);
+            localStorage.setItem('fotoPerfil', base64String); // la guardamos
+        };
+        reader.readAsDataURL(file);
+    };
+
+
 
     // Función simple: Redirigir a la pantalla especializada que ya arreglamos
     const irACambiarPassword = () => {
@@ -58,32 +92,80 @@ const Perfil = () => {
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}>
                 <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
                     marginBottom: '25px',
                     paddingBottom: '15px',
                     borderBottom: '1px solid #eee'
                 }}>
-                    <div style={{
-                        width: '60px',
-                        height: '60px',
-                        borderRadius: '50%',
-                        backgroundColor: '#3498db',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                        fontSize: '24px',
-                        fontWeight: 'bold',
-                        marginRight: '15px'
-                    }}>
-                        {doctorData.nombre.charAt(0)}
+                    {/* IZQUIERDA: avatar + nombre */}
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div
+                            style={{
+                                width: '60px',
+                                height: '60px',
+                                borderRadius: '50%',
+                                backgroundColor: '#3498db',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontSize: '24px',
+                                fontWeight: 'bold',
+                                marginRight: '15px',
+                                overflow: 'hidden'
+                            }}
+                        >
+                            {profileImage ? (
+                                <img
+                                    src={profileImage}
+                                    alt="Foto de perfil"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                            ) : (
+                                doctorData.nombre.charAt(0)
+                            )}
+                        </div>
+
+                        <div>
+                            <h3 style={{ margin: '0 0 5px 0' }}>
+                                {doctorData.nombre} {doctorData.apellidos}
+                            </h3>
+                            <p style={{ margin: 0, color: '#666' }}>{doctorData.especialidad}</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 style={{ margin: '0 0 5px 0' }}>{doctorData.nombre} {doctorData.apellidos}</h3>
-                        <p style={{ margin: 0, color: '#666' }}>{doctorData.especialidad}</p>
-                    </div>
+
+                    {/* DERECHA: botón para cambiar foto (solo si es Doctor) */}
+                    {rol === 'Doctor' && (
+                        <div>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                ref={fileInputRef}
+                                style={{ display: 'none' }}
+                                onChange={handleImageChange}
+                            />
+                            <button
+                                type="button"
+                                onClick={handleChangePhotoClick}
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '4px',
+                                    border: 'none',
+                                    backgroundColor: '#3498db',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontSize: '14px'
+                                }}
+                            >
+                                Cambiar foto
+                            </button>
+                        </div>
+                    )}
                 </div>
+
+
 
                 {/* Grid de información */}
                 <div style={{ 
