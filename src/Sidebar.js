@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import './App.css'; 
 
 // Importa tus imágenes
-import heartbeatLogo from './assets/heartbeat_logo.png';
+import heartbeatLogo from './assets/heartbeat.png';
 import usuariosAzul from './assets/usuarios-azul.png';
 import usuariosNegro from './assets/usuarios-negro.png';
 import agregarAzul from './assets/agregar-azul.png';

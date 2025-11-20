@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './App.css';
 import { useNavigate } from 'react-router-dom';
-import heartbeatLogo from './assets/heartbeat_logo.png';
+import heartbeatLogo from './assets/heartbeat.png';
 
 const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/";
 

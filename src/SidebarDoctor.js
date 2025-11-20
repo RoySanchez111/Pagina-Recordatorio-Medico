@@ -12,7 +12,7 @@ import salirImg from './assets/salir.png';
 import flechaImg from './assets/flecha-para-cerrar-barra.png';
 import recetaIconoAzul from './assets/editar-azul.png';
 import recetaIconoNegro from './assets/editar-negro.png';
-import heartbeatLogo from './assets/heartbeat_logo.png';
+import heartbeatLogo from './assets/heartbeat.png';
 
 function SidebarDoctor({ isCollapsed, toggleSidebar }) { 
     const navigate = useNavigate();
