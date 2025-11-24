@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import './App.css'; // Comentado temporalmente
 import ModalMedicamento from './AgregarMedicamento'; 
-// import usuariosData from './usuarios.json'; // <-- ELIMINADO
- import editarAzul from './assets/editar-azul.png'; // <-- Reemplazado
+import editarAzul from './assets/editar-azul.png';
 
-// <-- AÑADIDO: Tu URL de API
-const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/"; // <-- PEGA TU URL
+const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/";
 
-// Validaciones integradas (Sin cambios)
 const validarReceta = (recetaData) => {
   const errores = {};
-  // ... (Tu código de validación no cambia) ...
   if (!recetaData.pacienteId) {
     errores.pacienteId = 'Debe seleccionar un paciente';
   }
@@ -51,7 +47,6 @@ const validarReceta = (recetaData) => {
   };
 };
 
-// getTodayDate (Sin cambios)
 const getTodayDate = () => {
   const today = new Date();
   const yyyy = today.getFullYear();
@@ -71,9 +66,8 @@ function AgregarReceta() {
   const [medicamentoAEditar, setMedicamentoAEditar] = useState(null);
   const [doctorId, setDoctorId] = useState(null);
   const [errores, setErrores] = useState({});
-  const [loading, setLoading] = useState(false); // <-- AÑADIDO
+  const [loading, setLoading] = useState(false);
 
-  // <-- MODIFICADO: Ahora carga los pacientes del doctor desde la API
   useEffect(() => {
     const loggedInDoctorId = localStorage.getItem('userId');
     setDoctorId(loggedInDoctorId);
@@ -102,9 +96,8 @@ function AgregarReceta() {
     };
 
     fetchPatients();
-  }, []); // Se ejecuta una vez al cargar
+  }, []);
 
-  // (El resto de tus funciones 'handle...' no cambian)
   const handleSaveMedicamento = (medicamentoGuardado) => {
     if (medicamentoAEditar !== null) {
       const indexAActualizar = medicamentoAEditar.index;
@@ -120,8 +113,6 @@ function AgregarReceta() {
   };
 
   const handleRemoveMedicamento = (index) => {
-    // (Tuve que quitar window.confirm porque no es soportado)
-    // Simplemente eliminamos
     setMedicamentos(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -157,13 +148,11 @@ function AgregarReceta() {
     if (field === 'selectedPaciente') setSelectedPaciente(value);
   };
 
-  // <-- MODIFICADO COMPLETAMENTE: Ahora guarda la receta en la API
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // <-- AÑADIDO
+    setLoading(true);
     setErrores({});
 
-    // Validaciones (Sin cambios)
     const datosReceta = {
       pacienteId: selectedPaciente,
       fecha,
@@ -186,7 +175,48 @@ function AgregarReceta() {
         return;
     }
 
-    // 1. Preparar el 'payload' para la API de Lambda
+    // TRANSFORMAR LOS DATOS DE MEDICAMENTOS AL FORMATO QUE ESPERA LA API
+    const medicamentosTransformados = medicamentos.map(med => {
+      // Formatear duración para la API
+      let duracionTexto = '';
+      if (med.duracionTratamiento && med.unidadDuracion) {
+        const unidades = {
+          'dias': 'días',
+          'semanas': 'semanas', 
+          'meses': 'meses'
+        };
+        const unidadTexto = unidades[med.unidadDuracion] || med.unidadDuracion;
+        duracionTexto = `${med.duracionTratamiento} ${unidadTexto}`;
+      }
+      
+      // Formatear frecuencia para la API
+      let frecuenciaTexto = '';
+      if (med.frecuenciaHoras) {
+        frecuenciaTexto = `cada ${med.frecuenciaHoras} horas`;
+      }
+      
+      // Usar la primera hora fija como primera ingesta para la API
+      let primeraIngesta = '';
+      if (med.horasFijas && med.horasFijas.length > 0) {
+        primeraIngesta = med.horasFijas[0];
+      }
+
+      return {
+        nombre: med.nombre,
+        dosis: med.dosis,
+        cantidadInicial: med.cantidadInicial || 10,
+        duracion: duracionTexto,
+        frecuencia: frecuenciaTexto,
+        primeraIngesta: primeraIngesta,
+        instrucciones: med.instrucciones,
+        // Mantener campos originales para compatibilidad
+        horasFijas: med.horasFijas,
+        duracionTratamiento: med.duracionTratamiento,
+        unidadDuracion: med.unidadDuracion,
+        frecuenciaHoras: med.frecuenciaHoras
+      };
+    });
+
     const payload = {
       action: "createRecipe",
       data: {
@@ -195,11 +225,10 @@ function AgregarReceta() {
         fechaEmision: fecha,
         diagnostico: diagnostico.trim(),
         observaciones: observaciones.trim(),
-        medicamentos: medicamentos // Pasamos el array de medicamentos
+        medicamentos: medicamentosTransformados // Usar los datos transformados
       }
     };
 
-    // 2. Enviar a la API
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
@@ -212,12 +241,10 @@ function AgregarReceta() {
         throw new Error(data.message || 'Error al guardar la receta');
       }
 
-      // ¡Éxito!
       const pacienteInfo = pacientes.find(p => p.id === selectedPaciente);
       const nombrePaciente = pacienteInfo ? pacienteInfo.nombreCompleto : 'ID ' + selectedPaciente;
       alert(`✅ Receta asignada con éxito a ${nombrePaciente}.`);
 
-      // Limpiar formulario (Sin cambios)
       setMedicamentos([]);
       setSelectedPaciente("");
       setFecha(getTodayDate());
@@ -229,7 +256,7 @@ function AgregarReceta() {
       alert(`Error al guardar: ${err.message}`);
       setErrores(prev => ({ ...prev, general: err.message }));
     } finally {
-      setLoading(false); // <-- AÑADIDO
+      setLoading(false);
     }
   };
 
@@ -241,7 +268,6 @@ function AgregarReceta() {
       </h2>
 
       <div className="user-form-card">
-        {/* <-- AÑADIDO: 'disabled' en el formulario mientras carga --> */}
         <form onSubmit={handleFormSubmit}>
           <fieldset disabled={loading}>
             <div className="form-group">
@@ -358,7 +384,7 @@ function AgregarReceta() {
             <button 
               type="submit" 
               className="btn btn-primary"
-              disabled={loading} // <-- AÑADIDO
+              disabled={loading}
             >
               {loading ? "Guardando Receta..." : "Asignar Receta al Paciente"}
             </button>
