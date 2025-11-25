@@ -39,34 +39,47 @@ function Sidebar({ isCollapsed, toggleSidebar }) {
 
             {/* --- NAVEGACIÓN --- */}
             <nav className="nav-menu">
+                {/* Usuarios */}
                 <NavLink to="/dashboard/usuarios" className="nav-item">
                     {({ isActive }) => (
-                        <>
-                            <img src={isActive ? usuariosAzul : usuariosNegro} alt="Usuarios" />
-                            <span className="nav-text">Usuarios</span>
-                        </>
+                    <>
+                        <img src={isActive ? usuariosAzul : usuariosNegro} alt="Usuarios" />
+                        <span className="nav-text">Usuarios</span>
+                    </>
                     )}
                 </NavLink>
 
+                {/* Agregar usuario */}
                 <NavLink to="/dashboard/agregar-usuario" className="nav-item">
                     {({ isActive }) => (
-                        <>
-                            <img src={isActive ? agregarAzul : agregarNegro} alt="Agregar" />
-                            <span className="nav-text">Agregar Usuario</span>
-                        </>
+                    <>
+                        <img src={isActive ? agregarAzul : agregarNegro} alt="Agregar" />
+                        <span className="nav-text">Agregar Usuario</span>
+                    </>
                     )}
                 </NavLink>
 
+                {/* Editar usuario */}
                 <NavLink to="/dashboard/editar-usuario" className="nav-item">
                     {({ isActive }) => (
-                        <>
-                            <img src={isActive ? editarAzul : editarNegro} alt="Editar" />
-                            <span className="nav-text">Editar Usuario</span>
-                        </>
+                    <>
+                        <img src={isActive ? editarAzul : editarNegro} alt="Editar" />
+                        <span className="nav-text">Editar Usuario</span>
+                    </>
                     )}
                 </NavLink>
-            </nav>
 
+                {/* 👇 NUEVO: Ver pacientes */}
+                <NavLink to="/dashboard/ver-pacientes" className="nav-item">
+                    {({ isActive }) => (
+                    <>
+                        <img src={isActive ? usuariosAzul : usuariosNegro} alt="Ver pacientes" />
+                        <span className="nav-text">Ver pacientes</span>
+                    </>
+                    )}
+                </NavLink>
+                </nav>
+                
             {/* --- SALIR Y TOGGLE --- */}
             <div className="sidebar-footer">
                 <div className="nav-item logout-btn" onClick={handleLogout}>

@@ -5,6 +5,7 @@ import DashboardLayoutDoctor from './DashboardLayoutDoctor';
 import Usuarios from './Usuarios';
 import AgregarUsuario from './AgregarUsuario';
 import EditarUsuario from './EditarUsuario';
+import VerPacientesAdmin from "./VerPacientesAdmin";
 import './App.css';
 
 import VerPacientes from './VerPacientes';
@@ -74,7 +75,7 @@ function App() {
         <Route path="usuarios" element={<Usuarios />} />
         <Route path="agregar-usuario" element={<AgregarUsuario />} />
         <Route path="editar-usuario" element={<EditarUsuario />} />
-        {/* Ruta anidada opcional si quieres que aparezca dentro del layout */}
+        <Route path="ver-pacientes" element={<VerPacientesAdmin />} /> 
         <Route path="change-password" element={<ChangePassword />} /> 
         <Route index element={<Usuarios />} />
       </Route>
