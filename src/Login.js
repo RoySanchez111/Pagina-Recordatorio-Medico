@@ -137,6 +137,18 @@ function Login() {
                     >
                         {cargando ? 'Verificando...' : 'Ingresar'}
                     </button>
+                    <div style={{
+                        position: "fixed",
+                        bottom: 10,
+                        right: 10,
+                        padding: "4px 8px",
+                        backgroundColor: "rgba(0,0,0,0.05)",
+                        borderRadius: "4px",
+                        fontSize: "16px",
+                        color: "#666"
+                    }}>
+                        Versión: 1.8.11
+                    </div>
                 </form>
             </div>
         </div>
