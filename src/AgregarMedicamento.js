@@ -19,7 +19,6 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
 
   const [nuevaHoraFija, setNuevaHoraFija] = useState("08:00");
   const [duracionCalculada, setDuracionCalculada] = useState("");
-  const [horasCalculadas, setHorasCalculadas] = useState([]);
   const [usarDosisPersonalizada, setUsarDosisPersonalizada] = useState(false);
 
   // Opciones predefinidas para dosis
@@ -93,41 +92,6 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
       setDuracionCalculada("");
     }
   }, [formData.fechaInicio, formData.fechaFin]);
-
-  // Calcular horas basadas en la frecuencia
-  useEffect(() => {
-    if (formData.frecuenciaHoras && formData.horasFijas.length > 0) {
-      calcularHorasPorFrecuencia();
-    } else {
-      setHorasCalculadas([]);
-    }
-  }, [formData.frecuenciaHoras, formData.horasFijas]);
-
-  const calcularHorasPorFrecuencia = () => {
-    const frecuencia = parseInt(formData.frecuenciaHoras);
-    if (!frecuencia || frecuencia <= 0) {
-      setHorasCalculadas([]);
-      return;
-    }
-
-    const nuevasHoras = [];
-    
-    // Tomar la primera hora fija como referencia
-    const horaBase = formData.horasFijas[0];
-    const [horaBaseNum, minutoBaseNum] = horaBase.split(':').map(Number);
-    
-    // Calcular las siguientes 3 tomas basadas en la frecuencia
-    for (let i = 1; i <= 3; i++) {
-      const nuevaHoraTotal = horaBaseNum + (frecuencia * i);
-      const nuevaHora = nuevaHoraTotal % 24;
-      const nuevaHoraStr = nuevaHora.toString().padStart(2, '0');
-      const nuevoMinutoStr = minutoBaseNum.toString().padStart(2, '0');
-      
-      nuevasHoras.push(`${nuevaHoraStr}:${nuevoMinutoStr}`);
-    }
-    
-    setHorasCalculadas(nuevasHoras);
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -208,7 +172,6 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
     const datosCompletos = {
       ...formData,
       duracion: duracionCalculada,
-      horasCalculadas: horasCalculadas,
       // Incluir dosis formateada
       dosis: usarDosisPersonalizada 
         ? formData.dosisPersonalizada 
@@ -263,7 +226,7 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
               />
             </div>
 
-            {/* SECCIÓN MODIFICADA: DOSIS */}
+            {/* SECCIÓN DOSIS */}
             <div style={styles.section}>
               <h4 style={styles.sectionTitle}>Dosis</h4>
               
@@ -390,7 +353,7 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
               </div>
             </div>
 
-            {/* SECCIÓN: HORAS POR FRECUENCIA */}
+            {/* SECCIÓN: HORAS POR FRECUENCIA (SOLO INPUT) */}
             <div style={{ ...styles.formGroup, borderTop: '1px solid #eee', paddingTop: '15px' }}>
               <label style={{...styles.label, fontWeight: 'bold'}}>Horas por Frecuencia</label>
               
@@ -409,19 +372,6 @@ function ModalMedicamento({ isOpen, onClose, onSave, medicamentoInicial }) {
                   />
                 </div>
               </div>
-
-              {horasCalculadas.length > 0 && (
-                <div style={styles.horasCalculadasContainer}>
-                  <p style={styles.horasCalculadasTitle}>Próximas tomas calculadas:</p>
-                  <div style={styles.horasCalculadasList}>
-                    {horasCalculadas.map((hora, index) => (
-                      <span key={index} style={styles.horaCalculadaTag}>
-                        {formatTime(parseInt(hora.split(':')[0]), parseInt(hora.split(':')[1]))}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* SECCIÓN: DURACIÓN DEL TRATAMIENTO */}
@@ -757,34 +707,6 @@ const styles = {
     marginLeft: '5px',
     padding: '0 3px',
     lineHeight: 1,
-  },
-  // Estilos para horas calculadas por frecuencia
-  horasCalculadasContainer: {
-    marginTop: '15px',
-    padding: '12px',
-    background: '#f0f8ff',
-    border: '1px solid #b3d9ff',
-    borderRadius: '6px',
-  },
-  horasCalculadasTitle: {
-    margin: '0 0 8px 0',
-    fontSize: '0.85rem',
-    fontWeight: '600',
-    color: '#0066cc',
-  },
-  horasCalculadasList: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '8px',
-  },
-  horaCalculadaTag: {
-    display: 'inline-block',
-    background: '#0066cc20',
-    color: '#004d99',
-    padding: '4px 8px',
-    borderRadius: '12px',
-    fontSize: '0.8rem',
-    fontWeight: '500',
   },
 };
 
