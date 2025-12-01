@@ -1,9 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import './App.css'; 
-// import ModalMedicamento from './AgregarMedicamento'; // YA NO LO NECESITAMOS, HAREMOS EL FORMULARIO AQUÍ
 import editarAzul from './assets/editar-azul.png';
 
 const API_URL = "https://a6p5u37ybkzmvauf4lko6j3yda0qgkcb.lambda-url.us-east-1.on.aws/";
+
+// --- OPCIONES DESPLEGABLES ---
+const dosisOptions = [
+  { value: "capsula", label: "Cápsula(s)" },
+  { value: "tableta", label: "Tableta(s)" },
+  { value: "pastilla", label: "Pastilla(s)" },
+  { value: "comprimido", label: "Comprimido(s)" },
+  { value: "cucharadita", label: "Cucharadita(s)" },
+  { value: "cucharada", label: "Cucharada(s)" },
+  { value: "mililitro", label: "Mililitro(s)" },
+  { value: "gramo", label: "Gramo(s)" },
+  { value: "mg", label: "Miligramo(s)" },
+  { value: "gota", label: "Gota(s)" },
+  { value: "inyeccion", label: "Inyección(es)" },
+  { value: "aplicacion", label: "Aplicación(es)" },
+  { value: "puff", label: "Puff(s)" },
+  { value: "unidad", label: "Unidad(es)" }
+];
+
+const duracionOptions = [
+  { value: "dias", label: "Día(s)" },
+  { value: "semanas", label: "Semana(s)" },
+  { value: "meses", label: "Mes(es)" }
+];
 
 // --- VALIDACIONES ---
 const validarReceta = (recetaData) => {
@@ -26,6 +49,14 @@ const getTodayDate = () => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
+// Función para validar solo números y máximo 2 dígitos
+const validarSoloNumeros = (valor) => {
+  // Remover cualquier caracter que no sea número
+  const soloNumeros = valor.replace(/[^0-9]/g, '');
+  // Limitar a máximo 2 dígitos
+  return soloNumeros.slice(0, 2);
+};
+
 function AgregarReceta() {
   // --- ESTADOS GENERALES ---
   const [pacientes, setPacientes] = useState([]);
@@ -42,8 +73,12 @@ function AgregarReceta() {
   const [medActual, setMedActual] = useState({
     nombre: '',
     dosis: '',
-    horariosInput: '', // Aquí el doctor escribe "08:00, 16:00"
+    dosisCantidad: '',
+    dosisUnidad: '',
+    horariosInput: '',
     duracion: '',
+    duracionCantidad: '',
+    duracionUnidad: '',
     instrucciones: ''
   });
 
@@ -79,21 +114,48 @@ function AgregarReceta() {
     setMedActual({ ...medActual, [e.target.name]: e.target.value });
   };
 
+  // Handler específico para cantidad de dosis (solo números, max 2 dígitos)
+  const handleDosisCantidadChange = (e) => {
+    const valorValidado = validarSoloNumeros(e.target.value);
+    setMedActual({ ...medActual, dosisCantidad: valorValidado });
+  };
+
+  // Handler específico para cantidad de duración (solo números, max 2 dígitos)
+  const handleDuracionCantidadChange = (e) => {
+    const valorValidado = validarSoloNumeros(e.target.value);
+    setMedActual({ ...medActual, duracionCantidad: valorValidado });
+  };
+
+  const handleDosisUnidadChange = (e) => {
+    setMedActual({ ...medActual, dosisUnidad: e.target.value });
+  };
+
+  const handleDuracionUnidadChange = (e) => {
+    setMedActual({ ...medActual, duracionUnidad: e.target.value });
+  };
+
   const agregarMedicamentoALista = () => {
     // Validaciones simples
-    if (!medActual.nombre || !medActual.dosis || !medActual.horariosInput) {
+    if (!medActual.nombre || !medActual.dosisCantidad || !medActual.dosisUnidad || !medActual.horariosInput) {
         alert("Nombre, Dosis y Horarios son obligatorios.");
         return;
     }
 
+    // Construir dosis completa
+    const dosisCompleta = `${medActual.dosisCantidad} ${medActual.dosisUnidad}`;
+    
+    // Construir duración completa si hay cantidad
+    const duracionCompleta = medActual.duracionCantidad && medActual.duracionUnidad 
+      ? `${medActual.duracionCantidad} ${medActual.duracionUnidad}`
+      : medActual.duracion;
+
     // PROCESAMIENTO DE HORAS MANUALES
-    // Convertimos "08:00, 14:00 " -> ["08:00", "14:00"]
     const horariosArray = medActual.horariosInput
         .split(',')
         .map(h => h.trim())
         .filter(h => h.length > 0);
 
-    // Validar formato HH:MM (Opcional, pero recomendado)
+    // Validar formato HH:MM
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     const validTimes = horariosArray.every(t => timeRegex.test(t));
 
@@ -105,14 +167,26 @@ function AgregarReceta() {
     // Agregamos a la lista visual
     const nuevoMedicamento = {
         ...medActual,
-        horarios: horariosArray, // Guardamos el array limpio
-        id: Date.now() // ID temporal para la lista
+        dosis: dosisCompleta,
+        duracion: duracionCompleta,
+        horarios: horariosArray,
+        id: Date.now()
     };
 
     setListaMedicamentos([...listaMedicamentos, nuevoMedicamento]);
     
     // Limpiar campos
-    setMedActual({ nombre: '', dosis: '', horariosInput: '', duracion: '', instrucciones: '' });
+    setMedActual({ 
+      nombre: '', 
+      dosis: '', 
+      dosisCantidad: '', 
+      dosisUnidad: '', 
+      horariosInput: '', 
+      duracion: '', 
+      duracionCantidad: '', 
+      duracionUnidad: '', 
+      instrucciones: '' 
+    });
   };
 
   const eliminarMedicamento = (id) => {
@@ -142,15 +216,12 @@ function AgregarReceta() {
     }
 
     // PREPARAR PAYLOAD PARA LAMBDA
-    // La Lambda nueva espera 'horarios' como array en cada medicamento
     const medicamentosParaAPI = listaMedicamentos.map(med => ({
         nombre: med.nombre,
         dosis: med.dosis,
-        horarios: med.horarios, // Array directo ["08:00", "16:00"]
+        horarios: med.horarios,
         duracion: med.duracion,
         instrucciones: med.instrucciones,
-        
-        // Campos legacy para mantener compatibilidad si algo falla
         frecuencia: `Horarios: ${med.horarios.join(', ')}`,
         primeraIngesta: med.horarios[0] || '',
         cantidadInicial: 0
@@ -251,14 +322,36 @@ function AgregarReceta() {
                         <label>Medicamento</label>
                         <input name="nombre" value={medActual.nombre} onChange={handleMedChange} placeholder="Ej. Paracetamol" />
                     </div>
+                    
+                    {/* DOSIS CON SELECT */}
                     <div className="form-group">
-                        <label>Dosis</label>
-                        <input name="dosis" value={medActual.dosis} onChange={handleMedChange} placeholder="Ej. 500 mg" />
+                        <label>Dosis *</label>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                          <input 
+                            name="dosisCantidad" 
+                            value={medActual.dosisCantidad} 
+                            onChange={handleDosisCantidadChange} 
+                            placeholder="Cantidad"
+                            style={{ flex: 1 }}
+                            maxLength={2}
+                          />
+                          <select 
+                            value={medActual.dosisUnidad} 
+                            onChange={handleDosisUnidadChange}
+                            style={{ flex: 1 }}
+                          >
+                            {dosisOptions.map(option => (
+                              <option key={option.value} value={option.label}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                     </div>
                     
                     {/* CAMPO DE HORAS MANUALES */}
                     <div className="form-group full-width">
-                        <label style={{color: '#2c3e50', fontWeight:'bold'}}>Horarios de toma (Separados por coma)</label>
+                        <label style={{color: '#2c3e50', fontWeight:'bold'}}>Horarios de toma (Separados por coma) *</label>
                         <input 
                             name="horariosInput" 
                             value={medActual.horariosInput} 
@@ -271,10 +364,32 @@ function AgregarReceta() {
                         </small>
                     </div>
 
+                    {/* DURACIÓN CON SELECT */}
                     <div className="form-group">
                         <label>Duración</label>
-                        <input name="duracion" value={medActual.duracion} onChange={handleMedChange} placeholder="Ej. 5 días" />
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                          <input 
+                            name="duracionCantidad" 
+                            value={medActual.duracionCantidad} 
+                            onChange={handleDuracionCantidadChange} 
+                            placeholder="Duración"
+                            style={{ flex: 1 }}
+                            maxLength={2}
+                          />
+                          <select 
+                            value={medActual.duracionUnidad} 
+                            onChange={handleDuracionUnidadChange}
+                            style={{ flex: 1 }}
+                          >
+                            {duracionOptions.map(option => (
+                              <option key={option.value} value={option.label}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                     </div>
+
                     <div className="form-group">
                         <label>Instrucciones</label>
                         <input name="instrucciones" value={medActual.instrucciones} onChange={handleMedChange} placeholder="Ej. Tomar con alimentos" />

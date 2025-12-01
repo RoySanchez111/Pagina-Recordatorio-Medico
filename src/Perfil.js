@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Perfil = () => {
@@ -47,29 +47,6 @@ const Perfil = () => {
         setProfileImage(imagenGuardada);
     }
 }, []);
-
-    const fileInputRef = useRef(null);
-
-    const handleChangePhotoClick = () => {
-        if (fileInputRef.current) {
-            fileInputRef.current.click(); // abre el selector de archivos
-        }
-    };
-
-    const handleImageChange = (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const base64String = reader.result;
-            setProfileImage(base64String);
-            localStorage.setItem('fotoPerfil', base64String); // la guardamos
-        };
-        reader.readAsDataURL(file);
-    };
-
-
 
     // Función simple: Redirigir a la pantalla especializada que ya arreglamos
     const irACambiarPassword = () => {
@@ -135,37 +112,7 @@ const Perfil = () => {
                             <p style={{ margin: 0, color: '#666' }}>{doctorData.especialidad}</p>
                         </div>
                     </div>
-
-                    {/* DERECHA: botón para cambiar foto (solo si es Doctor) */}
-                    {rol === 'Doctor' && (
-                        <div>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                ref={fileInputRef}
-                                style={{ display: 'none' }}
-                                onChange={handleImageChange}
-                            />
-                            <button
-                                type="button"
-                                onClick={handleChangePhotoClick}
-                                style={{
-                                    padding: '8px 16px',
-                                    borderRadius: '4px',
-                                    border: 'none',
-                                    backgroundColor: '#3498db',
-                                    color: 'white',
-                                    cursor: 'pointer',
-                                    fontSize: '14px'
-                                }}
-                            >
-                                Cambiar foto
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-
+                </div> {/* ← ESTE ES EL DIV QUE FALTABA CERRAR */}
 
                 {/* Grid de información */}
                 <div style={{ 
