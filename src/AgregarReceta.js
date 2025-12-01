@@ -28,7 +28,19 @@ const duracionOptions = [
   { value: "meses", label: "Mes(es)" }
 ];
 
-// --- VALIDACIONES ---
+// --- FUNCIONES AUXILIARES ---
+
+// Convierte 14:00 -> 2:00 PM para mostrar al usuario
+const convertirA12Horas = (hora24) => {
+  if (!hora24) return "";
+  const [hora, minutos] = hora24.split(':');
+  let h = parseInt(hora, 10);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12;
+  h = h ? h : 12; 
+  return `${h}:${minutos} ${ampm}`;
+};
+
 const validarReceta = (recetaData) => {
   const errores = {};
   if (!recetaData.pacienteId) errores.pacienteId = 'Debe seleccionar un paciente';
@@ -49,16 +61,13 @@ const getTodayDate = () => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
-// Función para validar solo números y máximo 2 dígitos
 const validarSoloNumeros = (valor) => {
-  // Remover cualquier caracter que no sea número
   const soloNumeros = valor.replace(/[^0-9]/g, '');
-  // Limitar a máximo 2 dígitos
   return soloNumeros.slice(0, 2);
 };
 
 function AgregarReceta() {
-  // --- ESTADOS GENERALES ---
+  // --- ESTADOS ---
   const [pacientes, setPacientes] = useState([]);
   const [selectedPaciente, setSelectedPaciente] = useState("");
   const [fecha, setFecha] = useState(getTodayDate());
@@ -68,21 +77,24 @@ function AgregarReceta() {
   const [errores, setErrores] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // --- ESTADOS PARA EL MEDICAMENTO ACTUAL (FORMULARIO MANUAL) ---
+  // --- ESTADOS DE MEDICAMENTO ---
   const [listaMedicamentos, setListaMedicamentos] = useState([]);
+  
+  // CAMBIO AQUÍ: Inicializamos con "08:00" en lugar de ""
+  const [tempHora, setTempHora] = useState("08:00"); 
+  
+  const [horariosList, setHorariosList] = useState([]); 
+
   const [medActual, setMedActual] = useState({
     nombre: '',
-    dosis: '',
     dosisCantidad: '',
-    dosisUnidad: '',
-    horariosInput: '',
+    dosisUnidad: 'Cápsula(s)', 
     duracion: '',
     duracionCantidad: '',
-    duracionUnidad: '',
+    duracionUnidad: 'Día(s)', 
     instrucciones: ''
   });
 
-  // 1. CARGAR PACIENTES AL INICIAR
   useEffect(() => {
     const loggedInDoctorId = localStorage.getItem('userId');
     setDoctorId(loggedInDoctorId);
@@ -109,21 +121,16 @@ function AgregarReceta() {
     fetchPatients();
   }, []);
 
-  // --- MANEJO DEL FORMULARIO DE MEDICAMENTO ---
   const handleMedChange = (e) => {
     setMedActual({ ...medActual, [e.target.name]: e.target.value });
   };
 
-  // Handler específico para cantidad de dosis (solo números, max 2 dígitos)
   const handleDosisCantidadChange = (e) => {
-    const valorValidado = validarSoloNumeros(e.target.value);
-    setMedActual({ ...medActual, dosisCantidad: valorValidado });
+    setMedActual({ ...medActual, dosisCantidad: validarSoloNumeros(e.target.value) });
   };
 
-  // Handler específico para cantidad de duración (solo números, max 2 dígitos)
   const handleDuracionCantidadChange = (e) => {
-    const valorValidado = validarSoloNumeros(e.target.value);
-    setMedActual({ ...medActual, duracionCantidad: valorValidado });
+    setMedActual({ ...medActual, duracionCantidad: validarSoloNumeros(e.target.value) });
   };
 
   const handleDosisUnidadChange = (e) => {
@@ -134,72 +141,80 @@ function AgregarReceta() {
     setMedActual({ ...medActual, duracionUnidad: e.target.value });
   };
 
-  const agregarMedicamentoALista = () => {
-    // Validaciones simples
-    if (!medActual.nombre || !medActual.dosisCantidad || !medActual.dosisUnidad || !medActual.horariosInput) {
-        alert("Nombre, Dosis y Horarios son obligatorios.");
+  // --- LÓGICA DE HORARIOS ---
+  const agregarHoraALista = () => {
+    if (!tempHora) return; 
+
+    if (horariosList.includes(tempHora)) {
+        alert("Esa hora ya está agregada.");
         return;
     }
 
-    // Construir dosis completa
+    // Ordenamos cronológicamente
+    const nuevaLista = [...horariosList, tempHora].sort();
+    setHorariosList(nuevaLista);
+    
+    // CAMBIO AQUÍ: Al agregar, reseteamos a "08:00" para mantener la sugerencia
+    setTempHora("08:00"); 
+  };
+
+  const eliminarHoraDeLista = (horaAEliminar) => {
+    setHorariosList(horariosList.filter(h => h !== horaAEliminar));
+  };
+
+  // --- AGREGAR MEDICAMENTO ---
+  const agregarMedicamentoALista = () => {
+    if (!medActual.nombre || !medActual.dosisCantidad || !medActual.dosisUnidad) {
+        alert("Nombre y Dosis son obligatorios.");
+        return;
+    }
+
+    if (horariosList.length === 0) {
+        alert("Debes agregar al menos un horario de toma.");
+        return;
+    }
+
     const dosisCompleta = `${medActual.dosisCantidad} ${medActual.dosisUnidad}`;
     
-    // Construir duración completa si hay cantidad
     const duracionCompleta = medActual.duracionCantidad && medActual.duracionUnidad 
       ? `${medActual.duracionCantidad} ${medActual.duracionUnidad}`
       : medActual.duracion;
 
-    // PROCESAMIENTO DE HORAS MANUALES
-    const horariosArray = medActual.horariosInput
-        .split(',')
-        .map(h => h.trim())
-        .filter(h => h.length > 0);
-
-    // Validar formato HH:MM
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    const validTimes = horariosArray.every(t => timeRegex.test(t));
-
-    if (!validTimes) {
-        alert("Formato de hora inválido. Usa HH:MM separados por coma (Ej: 08:00, 20:00)");
-        return;
-    }
-
-    // Agregamos a la lista visual
     const nuevoMedicamento = {
         ...medActual,
         dosis: dosisCompleta,
         duracion: duracionCompleta,
-        horarios: horariosArray,
+        horarios: horariosList, // Se guarda en 24h
         id: Date.now()
     };
 
     setListaMedicamentos([...listaMedicamentos, nuevoMedicamento]);
     
-    // Limpiar campos
+    // Resetear formulario
     setMedActual({ 
       nombre: '', 
-      dosis: '', 
       dosisCantidad: '', 
-      dosisUnidad: '', 
-      horariosInput: '', 
+      dosisUnidad: 'Cápsula(s)', 
       duracion: '', 
       duracionCantidad: '', 
-      duracionUnidad: '', 
+      duracionUnidad: 'Día(s)', 
       instrucciones: '' 
     });
+    setHorariosList([]); 
+    // CAMBIO AQUÍ: Al terminar un medicamento, el reloj vuelve a sugerir 08:00
+    setTempHora("08:00");
   };
 
   const eliminarMedicamento = (id) => {
     setListaMedicamentos(listaMedicamentos.filter(m => m.id !== id));
   };
 
-  // --- GUARDAR RECETA EN AWS ---
+  // --- SUBMIT ---
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrores({});
 
-    // Validar cabecera
     const datosValidar = {
       pacienteId: selectedPaciente,
       fecha,
@@ -215,17 +230,20 @@ function AgregarReceta() {
       return;
     }
 
-    // PREPARAR PAYLOAD PARA LAMBDA
-    const medicamentosParaAPI = listaMedicamentos.map(med => ({
-        nombre: med.nombre,
-        dosis: med.dosis,
-        horarios: med.horarios,
-        duracion: med.duracion,
-        instrucciones: med.instrucciones,
-        frecuencia: `Horarios: ${med.horarios.join(', ')}`,
-        primeraIngesta: med.horarios[0] || '',
-        cantidadInicial: 0
-    }));
+    const medicamentosParaAPI = listaMedicamentos.map(med => {
+        const horariosBonitos = med.horarios.map(h => convertirA12Horas(h)).join(', ');
+
+        return {
+            nombre: med.nombre,
+            dosis: med.dosis,
+            horarios: med.horarios, // Array crudo (24h)
+            duracion: med.duracion,
+            instrucciones: med.instrucciones,
+            frecuencia: `Horarios: ${horariosBonitos}`, // Texto legible
+            primeraIngesta: med.horarios[0] || '',
+            cantidadInicial: 0
+        };
+    });
 
     const payload = {
       action: "createRecipe",
@@ -251,13 +269,13 @@ function AgregarReceta() {
       if (!response.ok) throw new Error(data.message || 'Error al guardar');
 
       alert(`✅ Receta guardada exitosamente.`);
-
-      // Reset total
       setListaMedicamentos([]);
       setSelectedPaciente("");
       setFecha(getTodayDate());
       setDiagnostico("");
       setObservaciones("");
+      setHorariosList([]);
+      setTempHora("08:00"); // Reset final
       
     } catch (err) {
       alert(`Error al guardar: ${err.message}`);
@@ -277,7 +295,7 @@ function AgregarReceta() {
         <form onSubmit={handleFormSubmit}>
           <fieldset disabled={loading} style={{border:'none', padding:0}}>
             
-            {/* SECCIÓN 1: DATOS GENERALES */}
+            {/* 1. DATOS PACIENTE */}
             <h3 style={{ color: '#3498db', borderBottom: '1px solid #eee', paddingBottom:'10px' }}>1. Datos del Paciente</h3>
             <div className="form-grid">
               <div className="form-group">
@@ -294,12 +312,10 @@ function AgregarReceta() {
                   ))}
                 </select>
               </div>
-
               <div className="form-group">
                 <label>Fecha Emisión</label>
                 <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
               </div>
-              
               <div className="form-group full-width">
                 <label>Diagnóstico *</label>
                 <input 
@@ -313,7 +329,7 @@ function AgregarReceta() {
               </div>
             </div>
 
-            {/* SECCIÓN 2: FORMULARIO DE MEDICAMENTOS */}
+            {/* 2. MEDICAMENTOS */}
             <h3 style={{ color: '#3498db', borderBottom: '1px solid #eee', marginTop: '30px', paddingBottom:'10px' }}>2. Agregar Medicamentos</h3>
             
             <div style={{ backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e9ecef' }}>
@@ -323,7 +339,6 @@ function AgregarReceta() {
                         <input name="nombre" value={medActual.nombre} onChange={handleMedChange} placeholder="Ej. Paracetamol" />
                     </div>
                     
-                    {/* DOSIS CON SELECT */}
                     <div className="form-group">
                         <label>Dosis *</label>
                         <div style={{ display: 'flex', gap: '10px' }}>
@@ -331,40 +346,64 @@ function AgregarReceta() {
                             name="dosisCantidad" 
                             value={medActual.dosisCantidad} 
                             onChange={handleDosisCantidadChange} 
-                            placeholder="Cantidad"
+                            placeholder="Cant."
                             style={{ flex: 1 }}
                             maxLength={2}
                           />
                           <select 
                             value={medActual.dosisUnidad} 
                             onChange={handleDosisUnidadChange}
-                            style={{ flex: 1 }}
+                            style={{ flex: 2 }}
                           >
                             {dosisOptions.map(option => (
-                              <option key={option.value} value={option.label}>
-                                {option.label}
-                              </option>
+                              <option key={option.value} value={option.label}>{option.label}</option>
                             ))}
                           </select>
                         </div>
                     </div>
                     
-                    {/* CAMPO DE HORAS MANUALES */}
-                    <div className="form-group full-width">
-                        <label style={{color: '#2c3e50', fontWeight:'bold'}}>Horarios de toma (Separados por coma) *</label>
-                        <input 
-                            name="horariosInput" 
-                            value={medActual.horariosInput} 
-                            onChange={handleMedChange} 
-                            placeholder="Ej: 08:00, 14:00, 20:00" 
-                            style={{borderColor: '#3498db'}}
-                        />
-                        <small style={{color: '#666', display:'block', marginTop:'5px'}}>
-                            Formato 24h. Escribe las horas exactas. Ej: 08:00, 16:00, 00:00
-                        </small>
+                    {/* SELECCIONADOR DE HORAS */}
+                    <div className="form-group full-width" style={{backgroundColor: '#eef6fc', padding: '15px', borderRadius: '6px', border: '1px dashed #3498db'}}>
+                        <label style={{color: '#2c3e50', fontWeight:'bold'}}>Horarios de toma *</label>
+                        <div style={{display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px'}}>
+                            <input 
+                                type="time" 
+                                value={tempHora}
+                                onChange={(e) => setTempHora(e.target.value)}
+                                style={{maxWidth: '150px', borderColor: '#3498db', fontSize: '16px'}}
+                            />
+                            <button 
+                                type="button"
+                                onClick={agregarHoraALista}
+                                style={{
+                                    backgroundColor: '#3498db', color: 'white', border: 'none', 
+                                    padding: '10px 15px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
+                                }}
+                            >
+                                + Agregar Hora
+                            </button>
+                        </div>
+
+                        {/* Visualización de Etiquetas (Chips) */}
+                        <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px'}}>
+                            {horariosList.length === 0 && <span style={{color: '#999', fontSize: '14px'}}>Selecciona una hora y pulsa agregar.</span>}
+                            
+                            {horariosList.map((hora, index) => (
+                                <div key={index} style={{
+                                    backgroundColor: 'white', border: '1px solid #3498db', color: '#3498db',
+                                    padding: '5px 10px', borderRadius: '20px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'
+                                }}>
+                                    {convertirA12Horas(hora)}
+                                    <span 
+                                        onClick={() => eliminarHoraDeLista(hora)}
+                                        style={{cursor: 'pointer', fontWeight: 'bold', color: '#e74c3c'}}
+                                        title="Quitar hora"
+                                    >×</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
-                    {/* DURACIÓN CON SELECT */}
                     <div className="form-group">
                         <label>Duración</label>
                         <div style={{ display: 'flex', gap: '10px' }}>
@@ -372,19 +411,17 @@ function AgregarReceta() {
                             name="duracionCantidad" 
                             value={medActual.duracionCantidad} 
                             onChange={handleDuracionCantidadChange} 
-                            placeholder="Duración"
+                            placeholder="Cant."
                             style={{ flex: 1 }}
                             maxLength={2}
                           />
                           <select 
                             value={medActual.duracionUnidad} 
                             onChange={handleDuracionUnidadChange}
-                            style={{ flex: 1 }}
+                            style={{ flex: 2 }}
                           >
                             {duracionOptions.map(option => (
-                              <option key={option.value} value={option.label}>
-                                {option.label}
-                              </option>
+                              <option key={option.value} value={option.label}>{option.label}</option>
                             ))}
                           </select>
                         </div>
@@ -403,31 +440,31 @@ function AgregarReceta() {
                         className="btn"
                         style={{backgroundColor: '#28a745', color: 'white', fontWeight:'bold', padding: '10px 20px'}}
                     >
-                        + Agregar a la Lista
+                        + Confirmar Medicamento
                     </button>
                 </div>
             </div>
 
-            {/* LISTA VISUAL DE MEDICAMENTOS AGREGADOS */}
+            {/* RESUMEN FINAL */}
             {listaMedicamentos.length > 0 && (
                 <div style={{ marginBottom: '30px' }}>
-                    <h4 style={{color:'#555'}}>Medicamentos en esta receta:</h4>
+                    <h4 style={{color:'#555'}}>Resumen de la Receta:</h4>
                     <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
                         {listaMedicamentos.map((med) => (
                             <div key={med.id} style={{
-                                backgroundColor: 'white', 
-                                borderLeft: '4px solid #3498db', 
-                                padding: '15px', 
-                                borderRadius: '4px',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center'
+                                backgroundColor: 'white', borderLeft: '4px solid #3498db', 
+                                padding: '15px', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                             }}>
                                 <div>
                                     <div style={{fontWeight:'bold', fontSize:'16px', color:'#2c3e50'}}>{med.nombre} <span style={{fontWeight:'normal', color:'#666'}}>({med.dosis})</span></div>
-                                    <div style={{fontSize:'14px', marginTop:'5px'}}>
-                                        <span style={{fontWeight:'bold', color:'#3498db'}}>Horarios:</span> {med.horarios.join(' - ')}
+                                    <div style={{fontSize:'14px', marginTop:'5px', display: 'flex', gap: '5px', flexWrap: 'wrap'}}>
+                                        <span style={{fontWeight:'bold', color:'#3498db'}}>Tomas:</span> 
+                                        {med.horarios.map(h => (
+                                            <span key={h} style={{background: '#eef6fc', padding: '0 5px', borderRadius: '3px', border:'1px solid #dae1e7'}}>
+                                              {convertirA12Horas(h)}
+                                            </span>
+                                        ))}
                                     </div>
                                     <div style={{fontSize:'13px', color:'#888', marginTop:'2px'}}>{med.duracion} • {med.instrucciones}</div>
                                 </div>
@@ -435,7 +472,6 @@ function AgregarReceta() {
                                     type="button" 
                                     onClick={() => eliminarMedicamento(med.id)}
                                     style={{color: '#e74c3c', background:'none', border:'none', cursor:'pointer', fontSize:'20px', fontWeight:'bold'}}
-                                    title="Eliminar"
                                 >
                                     ×
                                 </button>

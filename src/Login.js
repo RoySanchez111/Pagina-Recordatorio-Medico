@@ -147,7 +147,7 @@ function Login() {
                         fontSize: "16px",
                         color: "#666"
                     }}>
-                        Versión: 1.8.11
+                        Versión: 1.10.16
                     </div>
                 </form>
             </div>
